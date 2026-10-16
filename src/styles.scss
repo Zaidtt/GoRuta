@@ -1,15 +1,84 @@
-@import "tailwindcss";
+/* Global Design Tokens & Base Styles */
+:root {
+  --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
-@theme {
-  --color-brand-navy: #1b2234;
-  --color-brand-navy-light: #2a344d;
-  --color-brand-coral: #f05a41;
-  --color-brand-teal: #008080;
+  /* Color Palette matching design */
+  --color-navy-dark: #121826;
+  --color-navy-card: #1b2234;
+  --color-navy-border: #2c364e;
+  --color-navy-input: #232c41;
+
+  --color-coral: #f05a41;
+  --color-coral-hover: #dd4830;
+  --color-coral-glow: rgba(240, 90, 65, 0.35);
+
+  --color-teal: #0d828a;
+  --color-teal-hover: #086a71;
+  --color-teal-glow: rgba(13, 130, 138, 0.35);
+
+  --color-amber-badge: #f59e0b;
+  --color-teal-badge: #10b981;
+
+  --color-bg-page: #f8fafc;
+  --color-text-dark: #141a29;
+  --color-text-muted: #64748b;
+  --color-text-light: #cbd5e1;
+
+  --shadow-card: 0 12px 32px -4px rgba(18, 24, 38, 0.12), 0 4px 12px -2px rgba(18, 24, 38, 0.06);
+  --shadow-card-elevated: 0 20px 40px -6px rgba(27, 34, 52, 0.25), 0 10px 18px -4px rgba(27, 34, 52, 0.15);
+  --shadow-coral-button: 0 8px 24px -2px rgba(240, 90, 65, 0.45);
+  --shadow-teal-button: 0 8px 24px -2px rgba(13, 130, 138, 0.45);
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-pill: 9999px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background-color: #f8fafc;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--color-bg-page);
+  color: var(--color-text-dark);
+  font-family: var(--font-main);
   margin: 0;
   padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+input, select {
+  font-family: inherit;
+}
+
+/* Custom smooth scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }

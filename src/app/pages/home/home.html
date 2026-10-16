@@ -1,0 +1,795 @@
+<div class="travel-home">
+  <!-- Toast Notification -->
+  @if (toastMessage()) {
+    <div class="toast-notification" role="status" aria-live="polite">
+      <span class="toast-icon">✨</span>
+      <span class="toast-text">{{ toastMessage() }}</span>
+    </div>
+  }
+
+  <!-- =========================================================================
+       HERO SECTION WITH VIDEO BACKGROUND & TRANSPARENT SEARCH BAR
+       ========================================================================= -->
+  <header class="hero-section" id="hero">
+    <!-- Background Video (no music, muted, autoplay, loop) -->
+    <div class="hero-video-wrapper">
+      <video
+        autoplay
+        muted
+        loop
+        playsinline
+        class="hero-video-bg"
+      >
+        <source src="/video/Video.mp4" type="video/mp4" />
+      </video>
+      <div class="hero-video-overlay"></div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="nav-bar" aria-label="Navegación principal">
+      <a routerLink="/" class="nav-brand">
+        <span class="brand-plane">✈️</span>
+        <span class="brand-text">TravelBooking</span>
+      </a>
+
+      <div class="nav-links">
+        @for (link of navLinks; track link.label) {
+          <a
+            [href]="link.href"
+            class="nav-link"
+            [class.active]="link.active"
+          >
+            {{ link.label }}
+          </a>
+        }
+      </div>
+
+      <!-- Actions: Contacto & Iniciar sesión -->
+      <div class="nav-actions">
+        <button
+          type="button"
+          class="btn-nav-contact"
+          (click)="showToast('¡Gracias! Nuestro equipo de asesores se pondrá en contacto.')"
+        >
+          Contacto
+        </button>
+
+        <a routerLink="/login" class="btn-nav-login" title="Acceso de viajeros y administradores">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <span>Iniciar sesión</span>
+        </a>
+      </div>
+    </nav>
+
+    <!-- Hero Content: Transparent Glassmorphic Search Bar -->
+    <div class="hero-content">
+      <div class="hero-search-wrapper">
+        <div class="hero-search-glass-pill">
+          <input
+            type="text"
+            class="hero-transparent-input"
+            placeholder="Busca tu destino (ej. Tokyo, París, Roma, Bali...)"
+            [value]="heroSearchText()"
+            (input)="heroSearchText.set($any($event.target).value)"
+            (keyup.enter)="onHeroSearch()"
+            aria-label="Buscar destino internacional"
+          />
+          <button
+            type="button"
+            class="hero-search-icon-btn"
+            (click)="onHeroSearch()"
+            aria-label="Buscar"
+          >
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- =========================================================================
+       MAIN CONTENT: ADVANCED FILTERS + WIDE LUXURY BOOKING WIDGET + DESTINATIONS
+       ========================================================================= -->
+  <main class="main-content" id="search-section">
+    <div class="main-layout-grid">
+      
+      <!-- LEFT SIDEBAR: ADVANCED GLOBAL TRAVEL FILTERS -->
+      <aside class="travel-filters-sidebar" aria-label="Filtros de búsqueda avanzada">
+        <div class="sidebar-header-row">
+          <h2 class="sidebar-title">Filtros de Búsqueda</h2>
+          <button type="button" class="btn-reset-filters" (click)="resetFilters()">Limpiar</button>
+        </div>
+
+        <!-- 1. Región Global -->
+        <div class="filter-section">
+          <button
+            type="button"
+            class="filter-header"
+            (click)="regionesOpen.set(!regionesOpen())"
+            [attr.aria-expanded]="regionesOpen()"
+          >
+            <span>Destinos por Región</span>
+            <svg class="chevron" [class.rotated]="!regionesOpen()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+
+          @if (regionesOpen()) {
+            <div class="filter-body">
+              <div class="region-chips">
+                <button
+                  type="button"
+                  class="region-chip"
+                  [class.active]="selectedRegion() === 'todos'"
+                  (click)="selectedRegion.set('todos')"
+                >
+                  Todos
+                </button>
+                <button
+                  type="button"
+                  class="region-chip"
+                  [class.active]="selectedRegion() === 'Asia'"
+                  (click)="selectedRegion.set('Asia')"
+                >
+                  Asia
+                </button>
+                <button
+                  type="button"
+                  class="region-chip"
+                  [class.active]="selectedRegion() === 'Europa'"
+                  (click)="selectedRegion.set('Europa')"
+                >
+                  Europa
+                </button>
+                <button
+                  type="button"
+                  class="region-chip"
+                  [class.active]="selectedRegion() === 'América'"
+                  (click)="selectedRegion.set('América')"
+                >
+                  América
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- 2. Rango de Precio -->
+        <div class="filter-section">
+          <button
+            type="button"
+            class="filter-header"
+            (click)="preciosOpen.set(!preciosOpen())"
+            [attr.aria-expanded]="preciosOpen()"
+          >
+            <span>Presupuesto Máximo</span>
+            <svg class="chevron" [class.rotated]="!preciosOpen()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+
+          @if (preciosOpen()) {
+            <div class="filter-body">
+              <div class="price-slider-wrap">
+                <div class="price-display">
+                  <span class="price-min">$300</span>
+                  <span class="price-current-value">Hasta ${{ maxPrice() }}</span>
+                  <span class="price-max">$2,500+</span>
+                </div>
+                <input
+                  type="range"
+                  min="300"
+                  max="2500"
+                  step="50"
+                  [value]="maxPrice()"
+                  (input)="maxPrice.set(+$any($event.target).value)"
+                  class="range-slider"
+                />
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- 3. Escalas y Vuelos -->
+        <div class="filter-section">
+          <button
+            type="button"
+            class="filter-header"
+            (click)="escalasOpen.set(!escalasOpen())"
+            [attr.aria-expanded]="escalasOpen()"
+          >
+            <span>Opciones de Vuelo</span>
+            <svg class="chevron" [class.rotated]="!escalasOpen()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+
+          @if (escalasOpen()) {
+            <div class="filter-body">
+              <label class="modern-checkbox">
+                <input
+                  type="checkbox"
+                  [checked]="filterDirectFlights()"
+                  (change)="filterDirectFlights.set(!filterDirectFlights())"
+                />
+                <span class="check-box"></span>
+                <span class="check-label">Solo vuelos directos</span>
+              </label>
+
+              <label class="modern-checkbox">
+                <input type="checkbox" checked />
+                <span class="check-box"></span>
+                <span class="check-label">Incluye equipaje de mano</span>
+              </label>
+
+              <label class="modern-checkbox">
+                <input type="checkbox" />
+                <span class="check-box"></span>
+                <span class="check-label">Salidas por la mañana</span>
+              </label>
+            </div>
+          }
+        </div>
+
+        <!-- 4. Calificación de Estrellas -->
+        <div class="filter-section">
+          <button
+            type="button"
+            class="filter-header"
+            (click)="estrellasOpen.set(!estrellasOpen())"
+            [attr.aria-expanded]="estrellasOpen()"
+          >
+            <span>Calificación Mínima</span>
+            <svg class="chevron" [class.rotated]="!estrellasOpen()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+
+          @if (estrellasOpen()) {
+            <div class="filter-body">
+              <div class="rating-filter-options">
+                <button
+                  type="button"
+                  class="rating-btn"
+                  [class.active]="filterMinStars() === 5"
+                  (click)="filterMinStars.set(filterMinStars() === 5 ? 0 : 5)"
+                >
+                  ⭐⭐⭐⭐⭐ (Excelente 5.0)
+                </button>
+                <button
+                  type="button"
+                  class="rating-btn"
+                  [class.active]="filterMinStars() === 4"
+                  (click)="filterMinStars.set(filterMinStars() === 4 ? 0 : 4)"
+                >
+                  ⭐⭐⭐⭐ (Muy Bueno 4.0+)
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- 5. Beneficios y Servicios -->
+        <div class="filter-section">
+          <button
+            type="button"
+            class="filter-header"
+            (click)="serviciosOpen.set(!serviciosOpen())"
+            [attr.aria-expanded]="serviciosOpen()"
+          >
+            <span>Servicios Incluidos</span>
+            <svg class="chevron" [class.rotated]="!serviciosOpen()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+
+          @if (serviciosOpen()) {
+            <div class="filter-body">
+              <label class="modern-checkbox">
+                <input
+                  type="checkbox"
+                  [checked]="filterFreeCancellation()"
+                  (change)="filterFreeCancellation.set(!filterFreeCancellation())"
+                />
+                <span class="check-box"></span>
+                <span class="check-label">Cancelación Gratuita</span>
+              </label>
+
+              <label class="modern-checkbox">
+                <input
+                  type="checkbox"
+                  [checked]="filterBreakfast()"
+                  (change)="filterBreakfast.set(!filterBreakfast())"
+                />
+                <span class="check-box"></span>
+                <span class="check-label">Desayuno Incluido</span>
+              </label>
+
+              <label class="modern-checkbox">
+                <input type="checkbox" checked />
+                <span class="check-box"></span>
+                <span class="check-label">Wifi de Alta Velocidad</span>
+              </label>
+
+              <label class="modern-checkbox">
+                <input type="checkbox" checked />
+                <span class="check-box"></span>
+                <span class="check-label">Piscina / Spa de Lujo</span>
+              </label>
+            </div>
+          }
+        </div>
+      </aside>
+
+      <!-- RIGHT COLUMN: EXPANDED BOOKING SEARCH WIDGET + DESTINATIONS (NO EMPTY SPACES) -->
+      <section class="main-booking-destinations-column">
+        
+        <!-- WIDE BOOKING CARD WITH TABS AND BALANCED LAYOUT -->
+        <div class="booking-command-card">
+          <!-- Card Header Tabs -->
+          <div class="command-tabs-header" role="tablist">
+            <button
+              type="button"
+              class="cmd-tab"
+              [class.active]="activeTab() === 'vuelos'"
+              (click)="setTab('vuelos')"
+              role="tab"
+              [attr.aria-selected]="activeTab() === 'vuelos'"
+            >
+              <svg class="tab-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>
+              </svg>
+              <span>Vuelos</span>
+            </button>
+
+            <button
+              type="button"
+              class="cmd-tab"
+              [class.active]="activeTab() === 'hoteles'"
+              (click)="setTab('hoteles')"
+              role="tab"
+              [attr.aria-selected]="activeTab() === 'hoteles'"
+            >
+              <svg class="tab-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 4v16"/>
+                <path d="M2 8h18a2 2 0 0 1 2 2v10"/>
+                <path d="M2 17h20"/>
+                <path d="M6 8v9"/>
+              </svg>
+              <span>Hoteles</span>
+            </button>
+
+            <button
+              type="button"
+              class="cmd-tab"
+              [class.active]="activeTab() === 'paquetes'"
+              (click)="setTab('paquetes')"
+              role="tab"
+              [attr.aria-selected]="activeTab() === 'paquetes'"
+            >
+              <svg class="tab-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+              </svg>
+              <span>Paquetes Todo Incluido</span>
+            </button>
+          </div>
+
+          <!-- Command Body Form -->
+          <div class="command-body" [class.hotel-mode]="activeTab() === 'hoteles'">
+            @if (activeTab() === 'vuelos') {
+              <!-- VUELOS FORM -->
+              <form class="cmd-form" (ngSubmit)="onSearchSubmit()">
+                <div class="cmd-fields-grid four-cols">
+                  <!-- Origen -->
+                  <div class="field-item">
+                    <label class="field-tag">Origen</label>
+                    <div class="field-box">
+                      <svg class="box-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
+                        <path d="M2 12h20"></path>
+                      </svg>
+                      <input
+                        type="text"
+                        [value]="flightOrigin()"
+                        (input)="flightOrigin.set($any($event.target).value)"
+                        placeholder="Ciudad de origen"
+                      />
+                    </div>
+                  </div>
+
+                  <!-- Destino -->
+                  <div class="field-item">
+                    <label class="field-tag">Destino</label>
+                    <div class="field-box">
+                      <svg class="box-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                      </svg>
+                      <input
+                        type="text"
+                        [value]="flightDestination()"
+                        (input)="flightDestination.set($any($event.target).value)"
+                        placeholder="Destino soñado"
+                      />
+                    </div>
+                  </div>
+
+                  <!-- Fechas -->
+                  <div class="field-item">
+                    <label class="field-tag">Fechas de Viaje</label>
+                    <div class="field-box">
+                      <svg class="box-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                      </svg>
+                      <input
+                        type="text"
+                        [value]="flightDates()"
+                        (input)="flightDates.set($any($event.target).value)"
+                        placeholder="Fechas ida y vuelta"
+                      />
+                    </div>
+                  </div>
+
+                  <!-- Pasajeros & Clase -->
+                  <div class="field-item">
+                    <label class="field-tag">Pasajeros</label>
+                    <div class="field-box">
+                      <svg class="box-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                      </svg>
+                      <select
+                        [value]="flightPassengers()"
+                        (change)="flightPassengers.set($any($event.target).value)"
+                      >
+                        <option value="1 Pasajero, Turista">1 Pasajero, Turista</option>
+                        <option value="2 Pasajeros, Turista">2 Pasajeros, Turista</option>
+                        <option value="3 Pasajeros, Familiar">3 Pasajeros, Familiar</option>
+                        <option value="2 Pasajeros, Business Class">2 Pasajeros, Business Class</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Action Row -->
+                <div class="cmd-action-bar">
+                  <div class="quick-options">
+                    <label class="quick-option-item">
+                      <input
+                        type="checkbox"
+                        [checked]="flightDirectOnly()"
+                        (change)="flightDirectOnly.set(!flightDirectOnly())"
+                      />
+                      <span>Vuelo directo</span>
+                    </label>
+                    <span class="dot-separator">•</span>
+                    <span class="promo-text">🎉 20% OFF en rutas seleccionadas este mes</span>
+                  </div>
+
+                  <button type="submit" class="btn-search-main coral">
+                    <span>Buscar Vuelos</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                      <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                  </button>
+                </div>
+              </form>
+            } @else if (activeTab() === 'hoteles') {
+              <!-- HOTELES FORM -->
+              <form class="cmd-form" (ngSubmit)="onSearchSubmit()">
+                <div class="cmd-fields-grid three-cols">
+                  <!-- Ciudad / Hotel -->
+                  <div class="field-item">
+                    <label class="field-tag">Ciudad o Nombre de Hotel</label>
+                    <div class="field-box">
+                      <svg class="box-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 21h18"></path>
+                        <path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"></path>
+                      </svg>
+                      <input
+                        type="text"
+                        [value]="hotelCityOrName()"
+                        (input)="hotelCityOrName.set($any($event.target).value)"
+                        placeholder="Ej. París, Roma, Tokyo..."
+                      />
+                    </div>
+                  </div>
+
+                  <!-- Check-in / Check-out -->
+                  <div class="field-item">
+                    <label class="field-tag">Fechas de Estadía</label>
+                    <div class="field-box">
+                      <svg class="box-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                      </svg>
+                      <input
+                        type="text"
+                        [value]="hotelCheckIn() + ' al ' + hotelCheckOut()"
+                        placeholder="Check-in / Check-out"
+                      />
+                    </div>
+                  </div>
+
+                  <!-- Huéspedes y Habitaciones -->
+                  <div class="field-item">
+                    <label class="field-tag">Habitaciones y Huéspedes</label>
+                    <div class="field-box">
+                      <svg class="box-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                      </svg>
+                      <input
+                        type="text"
+                        [value]="hotelRoomsGuests()"
+                        (input)="hotelRoomsGuests.set($any($event.target).value)"
+                        placeholder="1 Habitación, 2 Huéspedes"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="cmd-action-bar">
+                  <div class="quick-options">
+                    <span class="promo-text">⭐ Más de 80,000 hoteles con cancelación gratuita</span>
+                  </div>
+
+                  <button type="submit" class="btn-search-main teal">
+                    <span>Buscar Hoteles</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                      <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                  </button>
+                </div>
+              </form>
+            } @else {
+              <!-- PAQUETES FORM -->
+              <form class="cmd-form" (ngSubmit)="onSearchSubmit()">
+                <div class="cmd-fields-grid three-cols">
+                  <div class="field-item">
+                    <label class="field-tag">Destino del Paquete</label>
+                    <div class="field-box">
+                      <input type="text" placeholder="Cualquier destino exótico" value="Bali o Japón All-Inclusive" />
+                    </div>
+                  </div>
+                  <div class="field-item">
+                    <label class="field-tag">Mes de Viaje</label>
+                    <div class="field-box">
+                      <input type="text" placeholder="Noviembre - Diciembre 2026" value="Temporada Alta" />
+                    </div>
+                  </div>
+                  <div class="field-item">
+                    <label class="field-tag">Presupuesto Estimado</label>
+                    <div class="field-box">
+                      <input type="text" placeholder="Hasta $2,000 USD por persona" value="Paquete Premium" />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="cmd-action-bar">
+                  <div class="quick-options">
+                    <span class="promo-text">🌴 Vuelo + Hotel + Tours guiados incluidos</span>
+                  </div>
+                  <button type="submit" class="btn-search-main coral">
+                    <span>Explorar Paquetes</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                      <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                  </button>
+                </div>
+              </form>
+            }
+          </div>
+
+          <!-- Integrated Trust Banner: Eliminates any empty white space with value -->
+          <div class="booking-trust-bar">
+            <div class="trust-item">
+              <span class="trust-icon">🛡️</span>
+              <div class="trust-text">
+                <strong>Mejor Precio Garantizado</strong>
+                <span>Sin tarifas ocultas ni sorpresas</span>
+              </div>
+            </div>
+
+            <div class="trust-item">
+              <span class="trust-icon">🔄</span>
+              <div class="trust-text">
+                <strong>Cancelación Flexible</strong>
+                <span>Reembolso hasta 24h antes</span>
+              </div>
+            </div>
+
+            <div class="trust-item">
+              <span class="trust-icon">🎧</span>
+              <div class="trust-text">
+                <strong>Soporte Personalizado 24/7</strong>
+                <span>Asesores expertos a tu disposición</span>
+              </div>
+            </div>
+
+            <div class="trust-item">
+              <span class="trust-icon">✨</span>
+              <div class="trust-text">
+                <strong>Experiencias Verificadas</strong>
+                <span>Hoteles 5 estrellas & tours VIP</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- =====================================================================
+             DESTINOS DESTACADOS CAROUSEL & CARDS
+             ===================================================================== -->
+        <section class="destinations-section" id="destinos" aria-label="Destinos destacados mundiales">
+          <div class="destinations-header">
+            <div>
+              <h2 class="destinations-title">Destinos Destacados</h2>
+              <p class="destinations-subtitle">Descubre las ciudades y paraísos más codiciados del planeta con tarifas exclusivas.</p>
+            </div>
+
+            <!-- Carousel Controls -->
+            <div class="carousel-nav-arrows">
+              <button
+                type="button"
+                class="carousel-arrow"
+                (click)="prevSlide()"
+                aria-label="Destinos anteriores"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+              </button>
+              <button
+                type="button"
+                class="carousel-arrow"
+                (click)="nextSlide()"
+                aria-label="Siguientes destinos"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Cards Carousel Slider -->
+          <div class="destinations-carousel-viewport">
+            <div
+              class="destinations-track"
+              [style.transform]="'translateX(' + (-currentSlide() * 34) + '%)'"
+            >
+              @for (dest of filteredDestinations(); track dest.id) {
+                <article class="destination-card">
+                  <!-- Image Wrapper -->
+                  <div class="dest-image-box">
+                    <img
+                      [src]="dest.image"
+                      [alt]="dest.title + ' - ' + dest.country"
+                      class="dest-img"
+                      loading="lazy"
+                    />
+
+                    <!-- Dynamic Badges -->
+                    <span
+                      class="dest-badge"
+                      [class.badge-fuji]="dest.tagType === 'fuji'"
+                      [class.badge-europe]="dest.tagType === 'europe'"
+                      [class.badge-tropical]="dest.tagType === 'tropical'"
+                      [class.badge-local]="dest.tagType === 'local'"
+                      [class.badge-teal]="dest.tagType === 'teal'"
+                    >
+                      {{ dest.tag }}
+                    </span>
+
+                    <!-- Country Pill -->
+                    <span class="country-pill">
+                      📍 {{ dest.country }}
+                    </span>
+
+                    <!-- Favorite Button -->
+                    <button
+                      type="button"
+                      class="dest-fav-btn"
+                      [class.active]="dest.isFavorite"
+                      (click)="toggleFavorite(dest.id, $event)"
+                      [attr.aria-label]="dest.isFavorite ? 'Quitar de favoritos' : 'Guardar en favoritos'"
+                    >
+                      <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                      </svg>
+                    </button>
+                  </div>
+
+                  <!-- Details -->
+                  <div class="dest-info">
+                    <div class="dest-title-row">
+                      <h3 class="dest-city">{{ dest.title }}</h3>
+                      <span class="dest-stars">⭐ {{ dest.stars }}.0</span>
+                    </div>
+
+                    <p class="dest-place">{{ dest.subtitle }}</p>
+
+                    <div class="dest-perks">
+                      @if (dest.hasFreeCancel) {
+                        <span class="perk-badge">✓ Cancelación gratis</span>
+                      }
+                      @if (dest.hasBreakfast) {
+                        <span class="perk-badge">☕ Desayuno</span>
+                      }
+                    </div>
+
+                    <div class="dest-price-footer">
+                      <div class="price-numbers">
+                        <span class="price-val">${{ dest.price }}</span>
+                        <span class="price-old">${{ dest.originalPrice }}</span>
+                      </div>
+                      <button
+                        type="button"
+                        class="btn-book-card"
+                        (click)="showToast('Iniciando reserva para ' + dest.title)"
+                      >
+                        Reservar
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              } @empty {
+                <div class="no-results-card">
+                  <span class="no-results-icon">🌍</span>
+                  <h3>No se encontraron destinos</h3>
+                  <p>Intenta ajustar tus filtros de búsqueda o tu presupuesto máximo.</p>
+                  <button type="button" class="btn-clear-search" (click)="resetFilters()">Ver todos los destinos</button>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Carousel Pagination Dots -->
+          <div class="carousel-dots-wrapper" aria-label="Navegación de diapositivas">
+            <button
+              type="button"
+              class="dot-indicator"
+              [class.active]="currentSlide() === 0"
+              (click)="goToSlide(0)"
+              aria-label="Diapositiva 1"
+            ></button>
+            <button
+              type="button"
+              class="dot-indicator"
+              [class.active]="currentSlide() === 1"
+              (click)="goToSlide(1)"
+              aria-label="Diapositiva 2"
+            ></button>
+            <button
+              type="button"
+              class="dot-indicator"
+              [class.active]="currentSlide() === 2"
+              (click)="goToSlide(2)"
+              aria-label="Diapositiva 3"
+            ></button>
+          </div>
+        </section>
+
+      </section>
+
+    </div>
+  </main>
+</div>
