@@ -1,0 +1,33 @@
+<section class="own-catalog" id="catalogo">
+  <div class="catalog-heading"><div><span class="eyebrow">NUESTRO CATÁLOGO</span><h2>{{ kind() === 'vuelos' ? 'Vuelos disponibles' : kind() === 'hoteles' ? 'Elige tu hotel' : 'Paquetes a tu medida' }}</h2><p>Ofertas seleccionadas por GoRuta. Precios en MXN.</p></div><button class="subtle" (click)="reload()">Actualizar</button></div>
+  <label class="catalog-filter">Buscar en {{ kind() }}<input type="search" [ngModel]="search()" (ngModelChange)="search.set($event)" placeholder="Destino, nombre o ruta"/></label>
+  <div class="catalog-tabs">@for (category of categories; track category) { <button [class.subtle]="kind() !== category" (click)="kindChange.emit(category)">{{ category | titlecase }}</button> }</div>
+  @if (error()) { <p class="alert" role="alert">{{ error() }}</p> }
+  @if (notice()) { <p class="notice" role="status">{{ notice() }}</p> }
+  @if (loading()) { <p role="status">Cargando ofertas…</p> }
+  <div class="offer-grid">
+    @for (row of rows(); track row.id) {
+      <article class="offer-card"><img [src]="photo(row)" [alt]="title(row)" loading="lazy"/><div class="offer-content"><h3>{{ title(row) }}</h3>
+        @if (kind() === 'vuelos') { <p>{{ row['airline'] }} · {{ row['direct'] ? 'Directo' : 'Con escalas' }}</p><p>{{ row['departure'] | date:'medium' }}</p><p>{{ row['availableSeats'] }} asientos disponibles</p> }
+        @if (kind() === 'hoteles') { <p>{{ row['city'] }}, {{ row['country'] }} · {{ row['stars'] }} estrellas</p><p>{{ row['description'] }}</p><p>{{ row['hasBreakfast'] ? 'Desayuno incluido' : 'Sin desayuno' }}</p> }
+        @if (kind() === 'paquetes') { <p>{{ row['destinationDetails']?.title }} · {{ row['nights'] }} noches</p><p>{{ row['flightDetails']?.airline }} · {{ row['hotelDetails']?.name }}</p><p>{{ row['description'] }}</p> }
+        <div class="offer-footer"><div><strong>{{ row['price'] ?? row['pricePerNight'] | currency:'MXN':'symbol':'1.2-2' }}</strong><small>{{ kind() === 'hoteles' ? 'por noche / habitación' : 'por viajero' }}</small></div><button [disabled]="unavailable(row)" (click)="open(row)">{{ unavailable(row) ? 'No disponible' : 'Reservar' }}</button></div>
+      </div></article>
+    } @empty { @if (!loading()) { <p class="empty">No hay ofertas publicadas que coincidan. Prueba otra búsqueda.</p> } }
+  </div>
+  @if (auth.user()) {
+    <div class="my-bookings"><h2>{{ auth.user()?.role === 'admin' ? 'Reservas del catálogo' : 'Mis reservas' }}</h2><div class="booking-list">
+      @for (booking of bookings(); track booking.id) { <article><div><strong>#{{ booking.id }} · {{ booking['destination'] }}</strong><p>{{ booking['type'] }} · {{ booking['amount'] | currency:'MXN' }} · {{ booking['status'] }}</p></div>@if (booking['status'] !== 'Cancelada') { <button class="subtle" [disabled]="busy()" (click)="cancel(booking)">Cancelar</button> }</article> } @empty { <p>Aún no tienes reservas.</p> }
+    </div></div>
+  } @else { <p class="login-note"><a routerLink="/login">Inicia sesión</a> para reservar y guardar favoritos.</p> }
+</section>
+@if (selected(); as row) {
+  <div class="booking-overlay"><section class="booking-dialog" role="dialog" aria-modal="true" aria-labelledby="booking-title"><h2 id="booking-title">Reservar {{ title(row) }}</h2><p>{{ kind() === 'hoteles' ? 'Una habitación. El total se calcula por noche.' : 'El total se calcula por viajero.' }}</p>
+    @if (error()) { <p class="alert" role="alert">{{ error() }}</p> }
+    <form #bookingForm="ngForm" (ngSubmit)="book()"><label>Viajeros<input name="travelers" type="number" [(ngModel)]="travelers" min="1" max="20" step="1" required/></label>
+      @if (kind() !== 'vuelos') { <label>Entrada<input name="checkIn" type="date" [(ngModel)]="checkIn" required/></label><label>Salida<input name="checkOut" type="date" [(ngModel)]="checkOut" required/></label> }
+      @if (kind() === 'paquetes') { <p>Selecciona una estancia de {{ row['nights'] }} noches.</p> }
+      <div class="dialog-actions"><button class="subtle" type="button" [disabled]="busy()" (click)="selected.set(null)">Cerrar</button><button type="submit" [disabled]="bookingForm.invalid || busy()">{{ busy() ? 'Guardando…' : 'Confirmar reserva' }}</button></div>
+    </form>
+  </section></div>
+}

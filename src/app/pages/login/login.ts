@@ -1,7 +1,10 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+
+import { Auth } from '../../core/auth';
+import { Api } from '../../core/api';
 
 @Component({
   selector: 'app-login',
@@ -11,6 +14,8 @@ import { Router, RouterLink } from '@angular/router';
   styleUrl: './login.scss'
 })
 export class Login {
+  private auth = inject(Auth);
+  private api = inject(Api);
   // Selected user role
   selectedRole = signal<'traveler' | 'admin'>('traveler');
 
@@ -61,20 +66,12 @@ export class Login {
 
     this.isLoading.set(true);
 
-    // Simulate authentication delay for high fidelity UX
-    setTimeout(() => {
-      this.isLoading.set(false);
-      if (this.selectedRole() === 'admin') {
-        this.successMessage.set('Credenciales verificadas. Accediendo al Panel de Administración...');
-        setTimeout(() => {
-          this.router.navigate(['/admin']);
-        }, 1000);
-      } else {
-        this.successMessage.set('¡Bienvenido de nuevo! Redirigiendo a tus viajes...');
-        setTimeout(() => {
-          this.router.navigate(['/']);
-        }, 1000);
-      }
-    }, 900);
+    this.auth.login(currentEmail, this.password(), this.rememberMe()).subscribe({
+      next: session => {
+        this.isLoading.set(false);
+        this.router.navigate([session.user.role === 'admin' ? '/admin' : '/']);
+      },
+      error: error => { this.isLoading.set(false); this.errorMessage.set(this.api.error(error)); }
+    });
   }
 }

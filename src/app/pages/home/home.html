@@ -46,6 +46,7 @@
 
       <!-- Actions: Contacto & Iniciar sesión -->
       <div class="nav-actions">
+        @if (auth.user()?.role === 'admin') { <a routerLink="/admin" class="btn-nav-login">Mi catálogo</a> }
         <button
           type="button"
           class="btn-nav-contact"
@@ -59,7 +60,7 @@
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
             <circle cx="12" cy="7" r="4"></circle>
           </svg>
-          <span>Iniciar sesión</span>
+          <span>{{ auth.user() ? 'Mi sesión' : 'Iniciar sesión' }}</span>
         </a>
       </div>
     </nav>
@@ -98,7 +99,7 @@
        ========================================================================= -->
   <main class="main-content" id="search-section">
     <div class="main-layout-grid">
-      
+
       <!-- LEFT SIDEBAR: ADVANCED GLOBAL TRAVEL FILTERS -->
       <aside class="travel-filters-sidebar" aria-label="Filtros de búsqueda avanzada">
         <div class="sidebar-header-row">
@@ -329,7 +330,7 @@
 
       <!-- RIGHT COLUMN: EXPANDED BOOKING SEARCH WIDGET + DESTINATIONS (NO EMPTY SPACES) -->
       <section class="main-booking-destinations-column">
-        
+
         <!-- WIDE BOOKING CARD WITH TABS AND BALANCED LAYOUT -->
         <div class="booking-command-card">
           <!-- Card Header Tabs -->
@@ -383,220 +384,13 @@
 
           <!-- Command Body Form -->
           <div class="command-body" [class.hotel-mode]="activeTab() === 'hoteles'">
-            @if (activeTab() === 'vuelos') {
-              <!-- VUELOS FORM -->
-              <form class="cmd-form" (ngSubmit)="onSearchSubmit()">
-                <div class="cmd-fields-grid four-cols">
-                  <!-- Origen -->
-                  <div class="field-item">
-                    <label class="field-tag">Origen</label>
-                    <div class="field-box">
-                      <svg class="box-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
-                        <path d="M2 12h20"></path>
-                      </svg>
-                      <input
-                        type="text"
-                        [value]="flightOrigin()"
-                        (input)="flightOrigin.set($any($event.target).value)"
-                        placeholder="Ciudad de origen"
-                      />
-                    </div>
-                  </div>
-
-                  <!-- Destino -->
-                  <div class="field-item">
-                    <label class="field-tag">Destino</label>
-                    <div class="field-box">
-                      <svg class="box-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                        <circle cx="12" cy="10" r="3"></circle>
-                      </svg>
-                      <input
-                        type="text"
-                        [value]="flightDestination()"
-                        (input)="flightDestination.set($any($event.target).value)"
-                        placeholder="Destino soñado"
-                      />
-                    </div>
-                  </div>
-
-                  <!-- Fechas -->
-                  <div class="field-item">
-                    <label class="field-tag">Fechas de Viaje</label>
-                    <div class="field-box">
-                      <svg class="box-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                        <line x1="16" y1="2" x2="16" y2="6"></line>
-                        <line x1="8" y1="2" x2="8" y2="6"></line>
-                        <line x1="3" y1="10" x2="21" y2="10"></line>
-                      </svg>
-                      <input
-                        type="text"
-                        [value]="flightDates()"
-                        (input)="flightDates.set($any($event.target).value)"
-                        placeholder="Fechas ida y vuelta"
-                      />
-                    </div>
-                  </div>
-
-                  <!-- Pasajeros & Clase -->
-                  <div class="field-item">
-                    <label class="field-tag">Pasajeros</label>
-                    <div class="field-box">
-                      <svg class="box-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="9" cy="7" r="4"></circle>
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                      </svg>
-                      <select
-                        [value]="flightPassengers()"
-                        (change)="flightPassengers.set($any($event.target).value)"
-                      >
-                        <option value="1 Pasajero, Turista">1 Pasajero, Turista</option>
-                        <option value="2 Pasajeros, Turista">2 Pasajeros, Turista</option>
-                        <option value="3 Pasajeros, Familiar">3 Pasajeros, Familiar</option>
-                        <option value="2 Pasajeros, Business Class">2 Pasajeros, Business Class</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Action Row -->
-                <div class="cmd-action-bar">
-                  <div class="quick-options">
-                    <label class="quick-option-item">
-                      <input
-                        type="checkbox"
-                        [checked]="flightDirectOnly()"
-                        (change)="flightDirectOnly.set(!flightDirectOnly())"
-                      />
-                      <span>Vuelo directo</span>
-                    </label>
-                    <span class="dot-separator">•</span>
-                    <span class="promo-text">🎉 20% OFF en rutas seleccionadas este mes</span>
-                  </div>
-
-                  <button type="submit" class="btn-search-main coral">
-                    <span>Buscar Vuelos</span>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                      <line x1="5" y1="12" x2="19" y2="12"></line>
-                      <polyline points="12 5 19 12 12 19"></polyline>
-                    </svg>
-                  </button>
-                </div>
-              </form>
-            } @else if (activeTab() === 'hoteles') {
-              <!-- HOTELES FORM -->
-              <form class="cmd-form" (ngSubmit)="onSearchSubmit()">
-                <div class="cmd-fields-grid three-cols">
-                  <!-- Ciudad / Hotel -->
-                  <div class="field-item">
-                    <label class="field-tag">Ciudad o Nombre de Hotel</label>
-                    <div class="field-box">
-                      <svg class="box-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M3 21h18"></path>
-                        <path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"></path>
-                      </svg>
-                      <input
-                        type="text"
-                        [value]="hotelCityOrName()"
-                        (input)="hotelCityOrName.set($any($event.target).value)"
-                        placeholder="Ej. París, Roma, Tokyo..."
-                      />
-                    </div>
-                  </div>
-
-                  <!-- Check-in / Check-out -->
-                  <div class="field-item">
-                    <label class="field-tag">Fechas de Estadía</label>
-                    <div class="field-box">
-                      <svg class="box-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                        <line x1="16" y1="2" x2="16" y2="6"></line>
-                        <line x1="8" y1="2" x2="8" y2="6"></line>
-                        <line x1="3" y1="10" x2="21" y2="10"></line>
-                      </svg>
-                      <input
-                        type="text"
-                        [value]="hotelCheckIn() + ' al ' + hotelCheckOut()"
-                        placeholder="Check-in / Check-out"
-                      />
-                    </div>
-                  </div>
-
-                  <!-- Huéspedes y Habitaciones -->
-                  <div class="field-item">
-                    <label class="field-tag">Habitaciones y Huéspedes</label>
-                    <div class="field-box">
-                      <svg class="box-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="12" cy="7" r="4"></circle>
-                      </svg>
-                      <input
-                        type="text"
-                        [value]="hotelRoomsGuests()"
-                        (input)="hotelRoomsGuests.set($any($event.target).value)"
-                        placeholder="1 Habitación, 2 Huéspedes"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div class="cmd-action-bar">
-                  <div class="quick-options">
-                    <span class="promo-text">⭐ Más de 80,000 hoteles con cancelación gratuita</span>
-                  </div>
-
-                  <button type="submit" class="btn-search-main teal">
-                    <span>Buscar Hoteles</span>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                      <line x1="5" y1="12" x2="19" y2="12"></line>
-                      <polyline points="12 5 19 12 12 19"></polyline>
-                    </svg>
-                  </button>
-                </div>
-              </form>
-            } @else {
-              <!-- PAQUETES FORM -->
-              <form class="cmd-form" (ngSubmit)="onSearchSubmit()">
-                <div class="cmd-fields-grid three-cols">
-                  <div class="field-item">
-                    <label class="field-tag">Destino del Paquete</label>
-                    <div class="field-box">
-                      <input type="text" placeholder="Cualquier destino exótico" value="Bali o Japón All-Inclusive" />
-                    </div>
-                  </div>
-                  <div class="field-item">
-                    <label class="field-tag">Mes de Viaje</label>
-                    <div class="field-box">
-                      <input type="text" placeholder="Noviembre - Diciembre 2026" value="Temporada Alta" />
-                    </div>
-                  </div>
-                  <div class="field-item">
-                    <label class="field-tag">Presupuesto Estimado</label>
-                    <div class="field-box">
-                      <input type="text" placeholder="Hasta $2,000 USD por persona" value="Paquete Premium" />
-                    </div>
-                  </div>
-                </div>
-
-                <div class="cmd-action-bar">
-                  <div class="quick-options">
-                    <span class="promo-text">🌴 Vuelo + Hotel + Tours guiados incluidos</span>
-                  </div>
-                  <button type="submit" class="btn-search-main coral">
-                    <span>Explorar Paquetes</span>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                      <line x1="5" y1="12" x2="19" y2="12"></line>
-                      <polyline points="12 5 19 12 12 19"></polyline>
-                    </svg>
-                  </button>
-                </div>
-              </form>
-            }
+            <form class="cmd-form" (ngSubmit)="onSearchSubmit()">
+              <div class="field-item">
+                <label class="field-tag" for="own-search">Buscar en {{ activeTab() }}</label>
+                <div class="field-box"><input id="own-search" type="search" [value]="catalogSearchText()" (input)="catalogSearchText.set($any($event.target).value)" placeholder="Escribe una ciudad, ruta o nombre" /></div>
+              </div>
+              <div class="cmd-action-bar"><span>Explora las ofertas disponibles y elige tus fechas al reservar.</span><button type="submit" class="btn-search-main coral">Ver ofertas</button></div>
+            </form>
           </div>
 
           <!-- Integrated Trust Banner: Eliminates any empty white space with value -->
@@ -613,7 +407,7 @@
               <span class="trust-icon">🔄</span>
               <div class="trust-text">
                 <strong>Cancelación Flexible</strong>
-                <span>Reembolso hasta 24h antes</span>
+                <span>Consulta las condiciones de tu oferta</span>
               </div>
             </div>
 
@@ -629,7 +423,7 @@
               <span class="trust-icon">✨</span>
               <div class="trust-text">
                 <strong>Experiencias Verificadas</strong>
-                <span>Hoteles 5 estrellas & tours VIP</span>
+                <span>Opciones elegidas por nuestro equipo</span>
               </div>
             </div>
           </div>
@@ -639,6 +433,8 @@
              DESTINOS DESTACADOS CAROUSEL & CARDS
              ===================================================================== -->
         <section class="destinations-section" id="destinos" aria-label="Destinos destacados mundiales">
+          @if (catalogError()) { <p role="alert">{{ catalogError() }} <button (click)="loadDestinations()">Reintentar</button></p> }
+          @if (catalogLoading()) { <p role="status">Cargando destinos…</p> }
           <div class="destinations-header">
             <div>
               <h2 class="destinations-title">Destinos Destacados</h2>
@@ -744,7 +540,7 @@
                       <button
                         type="button"
                         class="btn-book-card"
-                        (click)="showToast('Iniciando reserva para ' + dest.title)"
+                        (click)="showOffers(dest.title)"
                       >
                         Reservar
                       </button>
@@ -788,6 +584,7 @@
           </div>
         </section>
 
+        <app-catalog [kind]="activeTab()" [query]="catalogQuery()" (kindChange)="setTab($event)" />
       </section>
 
     </div>

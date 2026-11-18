@@ -1,4 +1,4 @@
-import { Component, signal, computed } from '@angular/core';
+import { Component, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -21,14 +21,45 @@ export interface GlobalDestination {
   hasBreakfast: boolean;
 }
 
+import { Api, Row } from '../../core/api';
+import { Auth } from '../../core/auth';
+import { Catalog } from './catalog';
+
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, Catalog],
   templateUrl: './home.html',
   styleUrl: './home.scss'
 })
 export class Home {
+  api = inject(Api); auth = inject(Auth);
+  catalogQuery = signal('');
+  catalogSearchText = signal('');
+  catalogLoading = signal(false);
+  catalogError = signal('');
+  private favoriteIds = new Map<number, number>();
+  constructor() { this.loadDestinations(); }
+  loadDestinations() {
+    this.catalogLoading.set(true); this.catalogError.set('');
+    this.api.all<Row>('destinations').subscribe({
+      next: rows => {
+        this.destinations.set(rows.filter(row => row['isPublished'] !== false).map(row => ({ ...row,
+          id: Number(row.id), price: Number(row['price']), originalPrice: Number(row['originalPrice']),
+          image: this.api.image(row['image']) } as GlobalDestination)));
+        this.catalogLoading.set(false);
+      }, error: error => { this.catalogLoading.set(false); this.catalogError.set(this.api.error(error)); }
+    });
+    if (this.auth.user()) this.api.all<Row>('favorites').subscribe({
+      next: rows => { this.favoriteIds = new Map(rows.map(row => [Number(row['destination']), Number(row.id)])); },
+      error: error => this.showToast(this.api.error(error))
+    });
+  }
+  showOffers(title: string) {
+    this.catalogQuery.set(title);
+    document.getElementById('catalogo')?.scrollIntoView({ behavior: 'smooth' });
+  }
+
   // Navigation
   readonly navLinks = [
     { label: 'Inicio', active: true, href: '#hero' },
@@ -87,110 +118,7 @@ export class Home {
   toastMessage = signal<string | null>(null);
 
   // Destinations Catalog
-  destinations = signal<GlobalDestination[]>([
-    {
-      id: 1,
-      title: 'Tokyo',
-      country: 'Japón',
-      subtitle: 'Bostiava & Shibuya, Tokyo',
-      tag: 'Fuji Especial',
-      tagType: 'fuji',
-      price: 1500,
-      originalPrice: 1900,
-      image: 'images/tokyo-fuji.jpg',
-      isFavorite: false,
-      region: 'Asia',
-      type: 'Vuelos',
-      stars: 5,
-      hasFreeCancel: true,
-      hasBreakfast: true
-    },
-    {
-      id: 2,
-      title: 'París',
-      country: 'Francia',
-      subtitle: 'Torre Eiffel & Río Sena',
-      tag: 'Europa Clásica',
-      tagType: 'europe',
-      price: 1420,
-      originalPrice: 1800,
-      image: 'images/paris.jpg',
-      isFavorite: false,
-      region: 'Europa',
-      type: 'Paquetes',
-      stars: 5,
-      hasFreeCancel: true,
-      hasBreakfast: true
-    },
-    {
-      id: 3,
-      title: 'Roma',
-      country: 'Italia',
-      subtitle: 'Coliseo Romano & Centro Histórico',
-      tag: 'Tour Histórico',
-      tagType: 'europe',
-      price: 1380,
-      originalPrice: 1750,
-      image: 'images/rome.jpg',
-      isFavorite: false,
-      region: 'Europa',
-      type: 'Hoteles',
-      stars: 5,
-      hasFreeCancel: true,
-      hasBreakfast: false
-    },
-    {
-      id: 4,
-      title: 'Bali',
-      country: 'Indonesia',
-      subtitle: 'Villas Tropicales & Terrazas Ubud',
-      tag: 'Paraíso Tropical',
-      tagType: 'tropical',
-      price: 1250,
-      originalPrice: 1600,
-      image: 'images/bali.jpg',
-      isFavorite: false,
-      region: 'Asia',
-      type: 'Paquetes',
-      stars: 5,
-      hasFreeCancel: true,
-      hasBreakfast: true
-    },
-    {
-      id: 5,
-      title: 'Kyoto',
-      country: 'Japón',
-      subtitle: 'Qukelad Hotel & Pagodas Gion',
-      tag: 'Tour Local',
-      tagType: 'local',
-      price: 1500,
-      originalPrice: 1900,
-      image: 'images/kyoto.jpg',
-      isFavorite: false,
-      region: 'Asia',
-      type: 'Hoteles',
-      stars: 5,
-      hasFreeCancel: false,
-      hasBreakfast: true
-    },
-    {
-      id: 6,
-      title: 'Osaka',
-      country: 'Japón',
-      subtitle: 'Beobas Dotonbori, Osaka',
-      tag: 'Tour Local',
-      tagType: 'teal',
-      price: 1500,
-      originalPrice: 1900,
-      image: 'images/osaka.jpg',
-      isFavorite: false,
-      region: 'Asia',
-      type: 'Vuelos',
-      stars: 4,
-      hasFreeCancel: true,
-      hasBreakfast: false
-    }
-  ]);
+  destinations = signal<GlobalDestination[]>([]);
 
   // Carousel current slide
   currentSlide = signal(0);
@@ -245,22 +173,26 @@ export class Home {
   // Methods
   setTab(tab: 'vuelos' | 'hoteles' | 'paquetes') {
     this.activeTab.set(tab);
+    this.catalogQuery.set('');
     const label = tab === 'vuelos' ? 'Vuelos' : tab === 'hoteles' ? 'Hoteles' : 'Paquetes Completos';
     this.showToast(`Buscando por categoría: ${label}`);
   }
 
+  favoriteBusy = signal(false);
   toggleFavorite(id: number, event: MouseEvent) {
     event.stopPropagation();
-    this.destinations.update(items =>
-      items.map(item => {
-        if (item.id === id) {
-          const next = !item.isFavorite;
-          this.showToast(next ? `Guardado en favoritos: ${item.title}` : `Eliminado de favoritos: ${item.title}`);
-          return { ...item, isFavorite: next };
-        }
-        return item;
-      })
-    );
+    if (!this.auth.user()) { this.showToast('Inicia sesión para guardar favoritos.'); return; }
+    if (this.favoriteBusy()) return;
+    this.favoriteBusy.set(true);
+    const favorite = this.favoriteIds.get(id);
+    const request = favorite ? this.api.delete(`favorites/${favorite}/`) : this.api.post<Row>('favorites/', { destination: id });
+    request.subscribe({
+      next: (row: any) => {
+        if (favorite) this.favoriteIds.delete(id); else this.favoriteIds.set(id, Number(row.id));
+        this.destinations.update(items => items.map(item => item.id === id ? { ...item, isFavorite: !favorite } : item));
+        this.favoriteBusy.set(false);
+      }, error: error => { this.favoriteBusy.set(false); this.showToast(this.api.error(error)); }
+    });
   }
 
   prevSlide() {
@@ -275,15 +207,7 @@ export class Home {
     this.currentSlide.set(index);
   }
 
-  onSearchSubmit() {
-    if (this.activeTab() === 'vuelos') {
-      this.showToast(`Buscando vuelos de ${this.flightOrigin()} a ${this.flightDestination()}...`);
-    } else if (this.activeTab() === 'hoteles') {
-      this.showToast(`Buscando alojamiento en ${this.hotelCityOrName()}...`);
-    } else {
-      this.showToast(`Buscando paquetes vacacionales completos...`);
-    }
-  }
+  onSearchSubmit() { this.showOffers(this.catalogSearchText()); }
 
   onHeroSearch() {
     const q = this.heroSearchText().trim();

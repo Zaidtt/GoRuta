@@ -1,59 +1,54 @@
-# TravelBooking
+# GoRuta · Frontend Angular
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.26.
+Aplicación universitaria de catálogo de viajes conectada a una API propia en
+Python con Django REST Framework y MariaDB de XAMPP.
 
-## Development server
+## Iniciar desde un clon
 
-To start a local development server, run:
+Requisitos: Node.js compatible con Angular 21, npm y el backend local en marcha.
 
-```bash
-ng serve
+```powershell
+git clone https://github.com/Zaidtt/GoRuta.git
+cd GoRuta
+npm ci
+npm start
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Abre http://localhost:4200. El backend está en
+https://github.com/Zaidtt/GoRuta_API y se inicia con `start.ps1` después de su
+instalación. MySQL debe estar encendido en XAMPP.
 
-## Code scaffolding
+La URL local de la API se define en `src/app/core/api.ts`:
+`http://127.0.0.1:8000/api/`.
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Funciones
 
-```bash
-ng generate component component-name
+- Login real y validación del rol desde el servidor.
+- Panel de administrador para crear, editar, publicar y eliminar destinos,
+  vuelos, hoteles y paquetes propios.
+- Paquetes que relacionan un destino, un vuelo y un hotel.
+- Fotografías locales optimizadas por el backend.
+- Reservas y favoritos persistidos en MariaDB.
+
+Los catálogos se administran en la propia aplicación; no se importan datos de
+proveedores externos. Los datos reales de la base y los archivos de `media/`
+del backend permanecen en tu equipo.
+
+## Cuentas de demostración locales
+
+El comando `seed_demo` del backend crea estas cuentas para pruebas:
+
+| Rol | Correo | Contraseña |
+| --- | --- | --- |
+| Administrador | admin@travelbooking.com | admin123 |
+| Viajero | viajero@ejemplo.com | viajero123 |
+
+## Verificar
+
+```powershell
+npm run build
+node node_modules\@angular\cli\bin\ng.js test --watch=false
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Git excluye `node_modules/`, `dist/`, la caché de Angular, archivos `.env`, claves,
+logs y exportaciones SQL. Instala las dependencias con `npm ci` en cada equipo.

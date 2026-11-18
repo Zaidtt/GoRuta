@@ -1,448 +1,74 @@
 <div class="admin-layout">
-  <!-- Toast -->
-  @if (adminToast()) {
-    <div class="admin-toast">
-      <span>🔔</span>
-      <span>{{ adminToast() }}</span>
-    </div>
-  }
-
-  <!-- Admin Sidebar -->
   <aside class="admin-sidebar">
-    <div class="sidebar-brand">
-      <span class="brand-icon">✈️</span>
-      <div class="brand-info">
-        <span class="brand-name">TravelAdmin</span>
-        <span class="brand-badge">Panel v1.0</span>
-      </div>
-    </div>
-
-    <nav class="admin-nav">
-      <button
-        class="admin-nav-item"
-        [class.active]="activeAdminTab() === 'overview'"
-        (click)="switchTab('overview')"
-      >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="3" width="7" height="7"></rect>
-          <rect x="14" y="3" width="7" height="7"></rect>
-          <rect x="14" y="14" width="7" height="7"></rect>
-          <rect x="3" y="14" width="7" height="7"></rect>
-        </svg>
-        <span>Vista General</span>
-      </button>
-
-      <button
-        class="admin-nav-item"
-        [class.active]="activeAdminTab() === 'flights'"
-        (click)="switchTab('flights')"
-      >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>
-        </svg>
-        <span>Gestión de Vuelos</span>
-      </button>
-
-      <button
-        class="admin-nav-item"
-        [class.active]="activeAdminTab() === 'hotels'"
-        (click)="switchTab('hotels')"
-      >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M2 4v16"/>
-          <path d="M2 8h18a2 2 0 0 1 2 2v10"/>
-          <path d="M2 17h20"/>
-          <path d="M6 8v9"/>
-        </svg>
-        <span>Alojamientos</span>
-      </button>
-
-      <button
-        class="admin-nav-item"
-        [class.active]="activeAdminTab() === 'bookings'"
-        (click)="switchTab('bookings')"
-      >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-          <polyline points="14 2 14 8 20 8"></polyline>
-          <line x1="16" y1="13" x2="8" y2="13"></line>
-          <line x1="16" y1="17" x2="8" y2="17"></line>
-          <polyline points="10 9 9 9 8 9"></polyline>
-        </svg>
-        <span>Reservas Realizadas</span>
-      </button>
-
-      <button
-        class="admin-nav-item backend-nav"
-        [class.active]="activeAdminTab() === 'backend'"
-        (click)="switchTab('backend')"
-      >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="16 18 22 12 16 6"></polyline>
-          <polyline points="8 6 2 12 8 18"></polyline>
-        </svg>
-        <span>Conexión Python (Backend)</span>
-      </button>
+    <div class="sidebar-brand"><span class="brand-icon">✈️</span><div class="brand-info"><span class="brand-name">GoRuta</span><span class="brand-badge">Mi catálogo</span></div></div>
+    <nav class="admin-nav" aria-label="Administración">
+      <button class="admin-nav-item" [class.active]="tab() === 'overview'" (click)="select('overview')">Resumen</button>
+      @for (entry of tabs; track entry.key) { <button class="admin-nav-item" [class.active]="tab() === entry.key" (click)="select(entry.key)">{{ entry.label }}</button> }
+      <button class="admin-nav-item" [class.active]="tab() === 'bookings'" (click)="select('bookings')">Reservas</button>
     </nav>
-
-    <div class="sidebar-footer">
-      <a routerLink="/" class="btn-return-site">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-          <polyline points="9 22 9 12 15 12 15 22"></polyline>
-        </svg>
-        <span>Ir a la Web</span>
-      </a>
-
-      <button class="btn-logout" (click)="logout()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-          <polyline points="16 17 21 12 16 7"></polyline>
-          <line x1="21" y1="12" x2="9" y2="12"></line>
-        </svg>
-        <span>Cerrar Sesión</span>
-      </button>
-    </div>
+    <div class="sidebar-footer"><a routerLink="/" class="btn-return-site">Ver sitio</a><button class="btn-logout" (click)="logout()">Cerrar sesión</button></div>
   </aside>
-
-  <!-- Admin Main Content Area -->
   <main class="admin-main">
-    <!-- Topbar -->
-    <header class="admin-topbar">
-      <div class="topbar-search">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="11" cy="11" r="8"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
-        <input type="text" placeholder="Buscar vuelos, hoteles, pasajeros o reservas..." />
-      </div>
-
-      <div class="admin-user-profile">
-        <div class="admin-avatar">AD</div>
-        <div class="profile-meta">
-          <span class="user-name">Administrador Maestro</span>
-          <span class="user-role">Super Admin</span>
-        </div>
-      </div>
-    </header>
-
-    <!-- CONTENT BY TAB -->
+    <header class="admin-topbar"><strong>Tu catálogo de viajes</strong><span>{{ auth.user()?.name }}</span><button class="btn-sm-action" (click)="reload()">Actualizar</button></header>
     <div class="admin-content-body">
-      
-      <!-- TAB 1: OVERVIEW -->
-      @if (activeAdminTab() === 'overview') {
-        <div class="tab-pane">
-          <div class="pane-header">
-            <div>
-              <h1 class="pane-title">Panel de Control de Viajes</h1>
-              <p class="pane-desc">Monitoreo en tiempo real de operaciones, reservas y disponibilidad global.</p>
-            </div>
-            <div class="pane-actions">
-              <button class="btn-action-primary" (click)="openNewModal('flight')">+ Nuevo Vuelo</button>
-              <button class="btn-action-secondary" (click)="openNewModal('hotel')">+ Nuevo Hotel</button>
-            </div>
-          </div>
-
-          <!-- Stats Grid -->
-          <div class="stats-cards-grid">
-            <div class="stat-card">
-              <div class="stat-icon-wrap coral">✈️</div>
-              <div class="stat-data">
-                <span class="stat-label">Vuelos Activos</span>
-                <span class="stat-value">{{ activeFlights() }}</span>
-                <span class="stat-trend positive">+4 esta semana</span>
-              </div>
-            </div>
-
-            <div class="stat-card">
-              <div class="stat-icon-wrap teal">🏨</div>
-              <div class="stat-data">
-                <span class="stat-label">Hoteles & Resorts</span>
-                <span class="stat-value">{{ registeredHotels() }}</span>
-                <span class="stat-trend positive">En 18 países</span>
-              </div>
-            </div>
-
-            <div class="stat-card">
-              <div class="stat-icon-wrap amber">📑</div>
-              <div class="stat-data">
-                <span class="stat-label">Reservas Totales</span>
-                <span class="stat-value">{{ totalBookings() }}</span>
-                <span class="stat-trend positive">98% satisfacción</span>
-              </div>
-            </div>
-
-            <div class="stat-card">
-              <div class="stat-icon-wrap blue">💰</div>
-              <div class="stat-data">
-                <span class="stat-label">Ingresos Registrados</span>
-                <span class="stat-value">{{ totalRevenue() }}</span>
-                <span class="stat-trend positive">+14% vs mes anterior</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Recent Bookings Table preview -->
-          <div class="data-section-card">
-            <div class="section-card-header">
-              <h2 class="section-card-title">Últimas Reservas de Clientes</h2>
-              <button class="link-btn" (click)="switchTab('bookings')">Ver todas →</button>
-            </div>
-
-            <div class="table-responsive">
-              <table class="admin-table">
-                <thead>
-                  <tr>
-                    <th>ID Reserva</th>
-                    <th>Cliente</th>
-                    <th>Tipo</th>
-                    <th>Destino</th>
-                    <th>Fecha</th>
-                    <th>Monto</th>
-                    <th>Estado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (b of bookings(); track b.id) {
-                    <tr>
-                      <td class="code-cell">{{ b.id }}</td>
-                      <td class="bold-cell">{{ b.customerName }}</td>
-                      <td>
-                        <span class="type-pill" [class]="b.type.toLowerCase()">{{ b.type }}</span>
-                      </td>
-                      <td>{{ b.destination }}</td>
-                      <td>{{ b.date }}</td>
-                      <td class="bold-cell">${{ b.amount }}</td>
-                      <td>
-                        <span class="status-badge" [class.success]="b.status === 'Confirmada'" [class.warning]="b.status === 'Pendiente'">
-                          {{ b.status }}
-                        </span>
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          </div>
+      @if (error() && !editor()) { <p class="form-alert" role="alert">{{ error() }}</p> }
+      @if (notice()) { <p class="save-notice" role="status">{{ notice() }}</p> }
+      @if (loading()) { <p role="status">Cargando datos…</p> }
+      @if (tab() === 'overview') {
+        <h1>Administra tus viajes</h1><p>Crea sólo las ofertas que quieres mostrar. Los cambios se conservan al cerrar la página.</p>
+        <div class="stats-cards-grid">
+          @for (entry of tabs; track entry.key) { <button class="stat-card" (click)="select(entry.key)"><div class="stat-data"><span class="stat-label">{{ entry.label }}</span><strong class="stat-value">{{ data()[entry.key].length }}</strong></div></button> }
         </div>
+        <div class="data-section-card help-card"><h2>Cómo armar tu catálogo</h2><p>1. Crea un destino con tu ciudad y fotografía.</p><p>2. Agrega vuelos y hoteles. Puedes asociarlos al destino.</p><p>3. Crea un paquete, selecciona su vuelo y hotel, las noches y el precio especial.</p><p>Desmarca «Publicado» para ocultar una oferta. Elimina los registros que ya no necesitas; si tienen reservas, consérvalos ocultos.</p><p>Las imágenes se guardan localmente, se reducen a WebP y se reutilizan si son iguales.</p></div>
+      } @else if (tab() === 'bookings') {
+        <h1>Reservas</h1><p>{{ stats()['totalBookings'] || 0 }} reservas · Total confirmado: {{ stats()['totalRevenue'] || 0 | currency:'MXN':'symbol':'1.2-2' }}</p>
+        <div class="data-section-card table-responsive"><table class="admin-table"><thead><tr><th>Reserva</th><th>Cliente</th><th>Destino</th><th>Tipo</th><th>Importe</th><th>Estado</th><th>Acción</th></tr></thead><tbody>
+          @for (row of bookings(); track row.id) { <tr><td>#{{ row.id }}</td><td>{{ row['customerName'] }}</td><td>{{ row['destination'] }}</td><td>{{ row['type'] }}</td><td>{{ row['amount'] | currency:'MXN' }}</td><td>{{ row['status'] }}</td><td>@if (row['status'] !== 'Cancelada') { <button class="btn-sm-action" [disabled]="saving()" (click)="cancelBooking(row)">Cancelar reserva</button> }</td></tr> } @empty { <tr><td colspan="7">Todavía no hay reservas.</td></tr> }
+        </tbody></table></div>
+      } @else {
+        <div class="pane-header"><div><h1>{{ title() }}</h1><p>{{ visibleRows().length }} registros de tu catálogo</p></div><button class="btn-action-primary" (click)="open(resource())">+ Crear registro</button></div>
+        <label class="catalog-search">Buscar en esta lista<input type="search" [ngModel]="search()" (ngModelChange)="search.set($event)" placeholder="Nombre, código o ruta" /></label>
+        <div class="data-section-card table-responsive"><table class="admin-table"><thead><tr><th>Foto</th><th>Nombre / ruta</th><th>Precio (MXN)</th><th>Publicación</th><th>Acciones</th></tr></thead><tbody>
+          @for (row of visibleRows(); track row.id) { <tr>
+            <td><img class="catalog-thumb" [src]="api.image(row['image'])" alt="" /></td><td><strong>{{ label(row) }}</strong><br/><small>{{ row.id }}</small>
+            @if (tab() === 'packages') { <p>{{ row['flightDetails']?.airline }} · {{ row['hotelDetails']?.name }} · {{ row['nights'] }} noches</p> }</td>
+            <td>{{ row['price'] ?? row['pricePerNight'] | currency:'MXN':'symbol':'1.2-2' }}</td>
+            <td><span class="status-badge" [class.success]="row['active'] ?? row['isPublished']">{{ (row['active'] ?? row['isPublished']) ? 'Publicado' : 'Oculto' }}</span></td>
+            <td><div class="row-actions"><button class="btn-sm-action" (click)="open(resource(), row)">Editar</button><button class="btn-sm-action delete-action" (click)="deleteTarget.set({resource: resource(), row: row})">Eliminar</button></div></td>
+          </tr> } @empty { <tr><td colspan="5">No hay registros. Crea tu primera oferta.</td></tr> }
+        </tbody></table></div>
       }
-
-      <!-- TAB 2: FLIGHTS -->
-      @if (activeAdminTab() === 'flights') {
-        <div class="tab-pane">
-          <div class="pane-header">
-            <div>
-              <h1 class="pane-title">Gestión de Vuelos Disponibles</h1>
-              <p class="pane-desc">Administra rutas, aerolíneas asociadas, precios y plazas disponibles.</p>
-            </div>
-            <button class="btn-action-primary" (click)="openNewModal('flight')">+ Crear Vuelo</button>
-          </div>
-
-          <div class="data-section-card">
-            <div class="table-responsive">
-              <table class="admin-table">
-                <thead>
-                  <tr>
-                    <th>Código</th>
-                    <th>Aerolínea</th>
-                    <th>Origen</th>
-                    <th>Destino</th>
-                    <th>Salida</th>
-                    <th>Precio</th>
-                    <th>Asientos</th>
-                    <th>Estado</th>
-                    <th>Acción</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (f of flights(); track f.id) {
-                    <tr>
-                      <td class="code-cell">{{ f.id }}</td>
-                      <td>{{ f.airline }}</td>
-                      <td class="bold-cell">{{ f.origin }}</td>
-                      <td class="bold-cell">{{ f.destination }}</td>
-                      <td>{{ f.departure }}</td>
-                      <td class="price-cell">${{ f.price }}</td>
-                      <td>{{ f.availableSeats }} disponibles</td>
-                      <td>
-                        <span class="status-badge" [class.success]="f.status === 'Activo'" [class.danger]="f.status === 'Lleno'">
-                          {{ f.status }}
-                        </span>
-                      </td>
-                      <td>
-                        <button class="btn-sm-action" (click)="showAdminToast('Modificando vuelo ' + f.id)">Editar</button>
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      }
-
-      <!-- TAB 3: HOTELS -->
-      @if (activeAdminTab() === 'hotels') {
-        <div class="tab-pane">
-          <div class="pane-header">
-            <div>
-              <h1 class="pane-title">Gestión de Alojamientos y Hoteles</h1>
-              <p class="pane-desc">Control de inventario de resorts, hoteles boutique y tarifas por noche.</p>
-            </div>
-            <button class="btn-action-secondary" (click)="openNewModal('hotel')">+ Crear Hotel</button>
-          </div>
-
-          <div class="data-section-card">
-            <div class="table-responsive">
-              <table class="admin-table">
-                <thead>
-                  <tr>
-                    <th>Código</th>
-                    <th>Nombre del Hotel</th>
-                    <th>Ciudad</th>
-                    <th>País</th>
-                    <th>Precio / Noche</th>
-                    <th>Rating</th>
-                    <th>Disponibilidad</th>
-                    <th>Acción</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (h of hotels(); track h.id) {
-                    <tr>
-                      <td class="code-cell">{{ h.id }}</td>
-                      <td class="bold-cell">{{ h.name }}</td>
-                      <td>{{ h.city }}</td>
-                      <td>{{ h.country }}</td>
-                      <td class="price-cell">${{ h.pricePerNight }}</td>
-                      <td>⭐ {{ h.rating }}</td>
-                      <td>
-                        <span class="status-badge success">{{ h.status }}</span>
-                      </td>
-                      <td>
-                        <button class="btn-sm-action" (click)="showAdminToast('Modificando hotel ' + h.id)">Editar</button>
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      }
-
-      <!-- TAB 4: BOOKINGS -->
-      @if (activeAdminTab() === 'bookings') {
-        <div class="tab-pane">
-          <div class="pane-header">
-            <div>
-              <h1 class="pane-title">Registro Maestro de Reservas</h1>
-              <p class="pane-desc">Detalle de compras y solicitudes de viajeros de todo el mundo.</p>
-            </div>
-          </div>
-
-          <div class="data-section-card">
-            <div class="table-responsive">
-              <table class="admin-table">
-                <thead>
-                  <tr>
-                    <th>ID Reserva</th>
-                    <th>Pasajero Titular</th>
-                    <th>Tipo</th>
-                    <th>Destino Solicitado</th>
-                    <th>Fecha de Compra</th>
-                    <th>Monto Cobrado</th>
-                    <th>Estado de Pago</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (b of bookings(); track b.id) {
-                    <tr>
-                      <td class="code-cell">{{ b.id }}</td>
-                      <td class="bold-cell">{{ b.customerName }}</td>
-                      <td>
-                        <span class="type-pill" [class]="b.type.toLowerCase()">{{ b.type }}</span>
-                      </td>
-                      <td>{{ b.destination }}</td>
-                      <td>{{ b.date }}</td>
-                      <td class="price-cell">${{ b.amount }}</td>
-                      <td>
-                        <span class="status-badge" [class.success]="b.status === 'Confirmada'" [class.warning]="b.status === 'Pendiente'">
-                          {{ b.status }}
-                        </span>
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      }
-
-      <!-- TAB 5: PYTHON BACKEND INTEGRATION READINESS -->
-      @if (activeAdminTab() === 'backend') {
-        <div class="tab-pane">
-          <div class="pane-header">
-            <div>
-              <h1 class="pane-title">Integración con Backend en Python</h1>
-              <p class="pane-desc">Estructura preparada para la conexión con la API y base de datos relacional.</p>
-            </div>
-            <div class="backend-status-pill ready">
-              <span class="pulse-dot"></span>
-              <span>Frontend listo para enlazar API</span>
-            </div>
-          </div>
-
-          <div class="backend-integration-grid">
-            <div class="backend-card">
-              <h3 class="backend-card-title">🐍 Endpoints REST Previstos (FastAPI / Flask / Django)</h3>
-              <ul class="endpoint-list">
-                <li>
-                  <span class="method get">GET</span>
-                  <code>/api/v1/destinations</code>
-                  <span class="desc">Obtener catálogo de destinos con filtros</span>
-                </li>
-                <li>
-                  <span class="method get">GET</span>
-                  <code>/api/v1/flights/search</code>
-                  <span class="desc">Búsqueda de vuelos por origen, destino y fechas</span>
-                </li>
-                <li>
-                  <span class="method get">GET</span>
-                  <code>/api/v1/hotels/search</code>
-                  <span class="desc">Búsqueda de hoteles por ciudad y check-in/out</span>
-                </li>
-                <li>
-                  <span class="method post">POST</span>
-                  <code>/api/v1/bookings</code>
-                  <span class="desc">Crear nueva reserva de viaje</span>
-                </li>
-                <li>
-                  <span class="method post">POST</span>
-                  <code>/api/v1/auth/login</code>
-                  <span class="desc">Autenticación de viajeros y administradores con JWT</span>
-                </li>
-              </ul>
-            </div>
-
-            <div class="backend-card">
-              <h3 class="backend-card-title">🗄️ Esquema de Base de Datos Diseñado</h3>
-              <div class="schema-info">
-                <p>Las tablas que sincronizarán con los modelos de Python incluyen:</p>
-                <div class="db-tables">
-                  <div class="db-table-chip"><code>users</code> (id, email, password_hash, role)</div>
-                  <div class="db-table-chip"><code>destinations</code> (id, name, country, price, image)</div>
-                  <div class="db-table-chip"><code>flights</code> (id, code, airline, origin, destination, seats)</div>
-                  <div class="db-table-chip"><code>hotels</code> (id, name, city, stars, price_night)</div>
-                  <div class="db-table-chip"><code>bookings</code> (id, user_id, type, amount, status)</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      }
-
     </div>
   </main>
 </div>
+@if (editor(); as resource) {
+  <div class="catalog-overlay"><section class="catalog-dialog" role="dialog" aria-modal="true" aria-labelledby="editor-title">
+    <div class="pane-header"><h2 id="editor-title">{{ editingId === undefined ? 'Crear' : 'Editar' }} · {{ resource === 'packages' ? 'Paquete' : resource === 'hotels' ? 'Hotel' : resource === 'flights' ? 'Vuelo' : 'Destino' }}</h2><button type="button" class="btn-sm-action" [disabled]="saving()" (click)="close()">Cerrar</button></div>
+    @if (error()) { <p class="form-alert" role="alert">{{ error() }}</p> }
+    <form #catalogForm="ngForm" (ngSubmit)="save()">
+      <div class="catalog-form-grid">
+        @for (field of schemas[resource]; track field.key) {
+          <label [class.checkbox-field]="field.type === 'checkbox'">{{ field.label }}
+            @if (field.source) {
+              <select [name]="field.key" [(ngModel)]="draft[field.key]" [required]="!!field.required"><option [ngValue]="null">Selecciona una opción</option>@for (option of data()[field.source]; track option.id) { <option [ngValue]="option.id">{{ label(option) }}</option> }</select>
+            } @else if (field.options) {
+              <select [name]="field.key" [(ngModel)]="draft[field.key]">@for (option of field.options; track option) { <option [value]="option">{{ option }}</option> }</select>
+            } @else if (field.type === 'checkbox') {
+              <input [name]="field.key" type="checkbox" [(ngModel)]="draft[field.key]" />
+            } @else if (field.type === 'number') {
+              <input [name]="field.key" type="number" [(ngModel)]="draft[field.key]" [required]="!!field.required" [min]="field.min ?? null" [max]="field.max ?? null" [step]="['stars','nights','availableSeats'].includes(field.key) ? '1' : 'any'" />
+            } @else {
+              <input [name]="field.key" [type]="field.type || 'text'" [(ngModel)]="draft[field.key]" [required]="!!field.required" [min]="field.min ?? null" [max]="field.max ?? null" [step]="['stars','nights','availableSeats'].includes(field.key) ? '1' : 'any'" [disabled]="field.key === 'id' && editingId !== undefined" [maxlength]="field.key === 'description' ? 3000 : field.key === 'id' ? 30 : 150" />
+            }
+          </label>
+        }
+      </div>
+      <div class="image-editor"><img [src]="preview()" alt="Vista previa de la oferta"/><label>Fotografía local (JPG, PNG o WebP, hasta 5 MB)<input type="file" accept="image/jpeg,image/png,image/webp" (change)="chooseImage($event)"/></label><button type="button" class="btn-sm-action" (click)="removeImage()">Quitar foto</button></div>
+      <p>Se optimiza la foto al guardar. Puedes ocultar el registro sin borrarlo.</p>
+      <button class="btn-action-primary" type="submit" [disabled]="catalogForm.invalid || saving()">{{ saving() ? 'Guardando…' : 'Guardar en catálogo' }}</button>
+    </form>
+  </section></div>
+}
+@if (deleteTarget(); as target) {
+  <div class="catalog-overlay"><section class="catalog-dialog small-dialog" role="dialog" aria-modal="true" aria-labelledby="delete-title"><h2 id="delete-title">Eliminar registro</h2><p>¿Eliminar «{{ label(target.row) }}»? Si tiene reservas o paquetes relacionados, se conservará y podrás ocultarlo.</p><div class="row-actions"><button class="btn-sm-action" [disabled]="saving()" (click)="deleteTarget.set(null)">Conservar</button><button class="btn-action-primary" [disabled]="saving()" (click)="confirmDelete()">Eliminar</button></div></section></div>
+}
