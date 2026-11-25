@@ -1,6 +1,7 @@
-import { Injectable, inject } from '@angular/core';
+import { Auth } from './auth';
+import { Injectable, Injector, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
-import { Observable, expand, map, reduce, EMPTY } from 'rxjs';
+import { Observable, expand, map, reduce, EMPTY, catchError, throwError } from 'rxjs';
 
 const local = ['localhost','127.0.0.1'].includes(location.hostname);
 const configuredRoot = (window as Window & { GORUTA_API_URL?:string }).GORUTA_API_URL;
@@ -16,8 +17,19 @@ export const storedSession = (): Session | null => {
 };
 export const authInterceptor: HttpInterceptorFn = (request, next) => {
   const token = storedSession()?.token;
-  return next(token && request.url !== API_ROOT + 'auth/login/' && request.url.startsWith(API_ROOT)
-    ? request.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : request);
+  const injector = inject(Injector);
+  if (!token || !request.url.startsWith(API_ROOT) || request.url === API_ROOT + 'auth/login/') return next(request);
+  const path = request.url.slice(API_ROOT.length).split('?')[0];
+  const publicRead = request.method === 'GET' &&
+    /^(destinations|flights|hotels|packages|goruta)\//.test(path);
+  return next(request.clone({ setHeaders: { Authorization: `Bearer ${token}` } })).pipe(
+    catchError(error => {
+      if (error.status === 401) {
+        if (storedSession()?.token === token) injector.get(Auth).clear();
+        if (publicRead) return next(request);
+      }
+      return throwError(() => error);
+    }));
 };
 
 @Injectable({ providedIn: 'root' })

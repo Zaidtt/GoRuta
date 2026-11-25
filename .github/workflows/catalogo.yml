@@ -1,0 +1,18 @@
+name: Disponibilidad de GoRuta durante la evaluaci?n
+on:
+  workflow_dispatch:
+  schedule:
+    # Ventana de evaluaci?n de 2026, incluida la noche del 9 de diciembre en M?xico.
+    - cron: '3,13,23,33,43,53 * 25-30 11 *'
+    - cron: '3,13,23,33,43,53 * 1-10 12 *'
+permissions: {}
+jobs:
+  catalogo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Comprobar la API y sus destinos p?blicos
+        run: |
+          if [[ $(date -u +%Y%m%d%H) -ge 2026121006 ]]; then exit 0; fi
+          curl -fsS --max-time 100 --retry 1 https://goruta-api.onrender.com/api/destinations/ |
+            jq -e '.count > 0 and (.results | length > 0)'
