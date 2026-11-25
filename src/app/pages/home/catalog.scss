@@ -13,16 +13,31 @@ input { padding:.85rem; border:1px solid #cbd5e1; border-radius:10px; width:100%
 button { border:0; border-radius:9px; background:#e85b49; color:white; padding:.7rem 1rem; cursor:pointer; font-weight:700; } button.subtle { background:#e8f1f5; color:#10263c; } button:disabled { opacity:.5; cursor:default; }
 .empty,.login-note { background:#f1f5f9; padding:1.5rem; border-radius:12px; } .alert { background:#fff1f2; color:#9f1239; padding:1rem; border-radius:9px; } .notice { background:#dcfce7; color:#166534; padding:1rem; border-radius:9px; }
 .my-bookings { margin-top:2rem; } .booking-list article { display:flex; align-items:center; justify-content:space-between; gap:1rem; border-bottom:1px solid #e2e8f0; padding:1rem 0; }
-.booking-overlay { position:fixed; inset:0; z-index:1000; background:#10263cab; display:flex; align-items:center; justify-content:center; padding:1rem; }
-.booking-dialog { background:white; padding:2rem; border-radius:18px; max-width:480px; width:100%; max-height:90vh; overflow:auto; } .booking-dialog label { display:grid; gap:.4rem; margin:1rem 0; } .dialog-actions { display:flex; gap:1rem; justify-content:flex-end; margin-top:1.5rem; }
 @media(max-width:600px) { .catalog-heading { align-items:flex-start; } .offer-grid { grid-template-columns:1fr; } }
 
-.booking-dialog {background:#fff;color:#152939; width:min(96vw,610px)} .booking-dialog h2,.booking-dialog h3,.booking-dialog label,.booking-dialog p,.offer-card h3,.own-catalog h2 {color:#172d41}
-.booking-dialog input {color:#122433;background:white}.choice {display:flex!important;align-items:center;padding:.65rem;border:1px solid #b4c5d0;border-radius:.6rem}.choice input {width:auto}.choice img{width:70px;height:55px;object-fit:cover}.cabin{margin:1rem auto;max-width:370px;border:3px solid #9fb5c5;border-radius:45% 45% 16px 16px;padding:2.8rem 1rem 1rem;background:#edf4f6;text-align:center}.seats{margin-top:1rem;display:grid;grid-template-columns:repeat(3,1fr) .6fr repeat(3,1fr);gap:4px}.seats button{padding:.45rem .1rem;background:#145875;color:white}.seats button:nth-child(6n+4){grid-column:5}.seats button.chosen{background:#117048}.seats button:disabled{background:#9daab0;color:#293742}.payments{display:flex;flex-wrap:wrap;gap:.5rem;margin:1rem 0}.booking-dialog article{padding:.75rem 0;border-bottom:1px solid #ccd5df}
+.choice {display:flex!important;align-items:center;padding:.65rem;border:1px solid #b4c5d0;border-radius:.6rem}.choice input {width:auto}.choice img{width:70px;height:55px;object-fit:cover}.seats{margin-top:1rem;display:grid;grid-template-columns:repeat(3,1fr) .6fr repeat(3,1fr);gap:4px}.seats button{padding:.45rem .1rem;background:#145875;color:white}.seats button:nth-child(6n+4){grid-column:5}.seats button.chosen{background:#117048}.seats button:disabled{background:#9daab0;color:#293742}.payments{display:flex;flex-wrap:wrap;gap:.5rem;margin:1rem 0}.trip-panel article{padding:.75rem 0;border-bottom:1px solid #ccd5df}
 
 .flight-list {grid-template-columns:1fr}
 .flight-list .offer-card {display:grid;grid-template-columns:minmax(110px,20%) 1fr}
 .carrier {display:grid;align-content:center;justify-items:center;gap:.5rem;padding:.8rem;background:#f1f7f8;font-weight:700;color:#153f50;text-align:center}
 .carrier img,.choice img.brand {width:48px;height:48px;object-fit:contain}
-.booking-dialog .eyebrow {display:block;margin-top:1rem}
+.trip-panel .eyebrow {display:block;margin-top:1rem}
 .choice:has(input:checked) {border-color:#087e8b;background:#effafa}
+.back-link{display:inline-block;color:#136b73;text-decoration:none;font-weight:700;margin:1.5rem 0}
+.detail-heading h1{font:750 clamp(1.9rem,4.4vw,3.7rem)/1.06 var(--font-heading);letter-spacing:-.045em;color:var(--color-navy-dark);margin:.5rem 0}
+.detail-heading p{color:#43556a}.stars{color:#986217}
+.cover{margin:1.4rem 0 0;border-radius:24px;overflow:hidden;background:#dae5e6}.cover img{display:block;width:100%;height:clamp(200px,33vw,395px);object-fit:cover}
+.trip-layout{display:grid;grid-template-columns:minmax(0,2.3fr) minmax(230px,1fr);gap:1.5rem;align-items:start;padding:1.5rem 0 4rem}
+.trip-panel,.trip-summary{background:white;border:1px solid #dce5ea;border-radius:20px;padding:clamp(16px,3vw,34px);color:#172b3a;min-width:0}
+.trip-panel:only-child{grid-column:1/-1}
+.trip-summary{position:sticky;top:1rem;border-top:4px solid var(--color-teal)}.trip-summary h2{font-size:1.35rem}.trip-summary div{display:flex;gap:.6rem;align-items:center;justify-content:space-between;border-top:1px solid #dae3ea;padding:.85rem 0}.trip-summary strong{font-size:1.3rem}
+.trip-panel label{display:grid;gap:.35rem;margin:.8rem 0}.trip-panel button{margin:.18rem}.trip-panel h2{font-family:var(--font-heading);letter-spacing:-.025em}
+.trip-panel article{border-bottom:1px solid #dbe3e9;padding:1rem 0}.trip-panel .choice{gap:.8rem;border-radius:14px;cursor:pointer}
+.amenities{display:flex;flex-wrap:wrap;gap:.5rem;padding:0;list-style:none}.amenities li{background:#edf6f4;color:#165c58;border-radius:100px;padding:.45rem .8rem}
+.date-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+.airfield{position:relative;isolation:isolate;padding:14% 0 18%;background:radial-gradient(ellipse,#e1edf1,#f4f8fa);border-radius:18px;margin:1rem 0}
+.airframe{position:absolute;inset:0;width:100%;height:100%;z-index:-1}
+.airfield .seats{width:45%;margin:0 auto;grid-template-columns:repeat(3,minmax(0,1fr)) .45fr repeat(3,minmax(0,1fr));gap:3px}
+.airfield .seats button{margin:0;border-radius:5px 5px 3px 3px;border-bottom:3px solid #0b3f52;min-height:32px;font-size:clamp(.65rem,1.5vw,.9rem)}
+.airfield .seats .chosen{background:#087456;border-color:#09543f}.airfield .seats button:disabled{border-color:#aebbc2;opacity:1}
+@media(max-width:760px){.trip-layout{grid-template-columns:1fr}.trip-summary{position:static}.date-pair{gap:.4rem}.airfield .seats{width:48%;gap:1px}.airfield .seats button{font-size:.64rem;min-height:27px;padding:0}.trip-panel:has(.airfield){padding:10px}}

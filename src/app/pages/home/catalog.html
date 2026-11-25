@@ -1,7 +1,8 @@
+@if(!recordCode() && !initialStep()){
 <section class="own-catalog" id="catalogo">
   <div class="catalog-heading"><div><span class="eyebrow">NUESTRO CATÁLOGO</span><h2>{{ kind() === 'vuelos' ? 'Vuelos disponibles' : kind() === 'hoteles' ? 'Elige tu hotel' : 'Paquetes a tu medida' }}</h2><p>Ofertas seleccionadas por GoRuta. Precios en MXN.</p></div><button class="subtle" (click)="reload()">Actualizar</button></div>
   <label class="catalog-filter">Buscar en {{ kind() }}<input type="search" [ngModel]="search()" (ngModelChange)="search.set($event)" placeholder="Destino, nombre o ruta"/></label>
-  <button (click)="step.set('carrito')">🛒 Mi carrito ({{cart().length}})</button><div class="catalog-tabs">@for (category of categories; track category) { <button [class.subtle]="kind() !== category" (click)="kindChange.emit(category)">{{ category | titlecase }}</button> }</div>
+  <button routerLink="/goruta/carrito">🛒 Mi carrito ({{cart().length}})</button><div class="catalog-tabs">@for (category of categories; track category) { <button [class.subtle]="kind() !== category" (click)="kindChange.emit(category)">{{ category | titlecase }}</button> }</div>
   @if (error()) { <p class="alert" role="alert">{{ error() }}</p> }
   @if (notice()) { <p class="notice" role="status">{{ notice() }}</p> }
   @if (loading()) { <p role="status">Cargando ofertas…</p> }
@@ -15,7 +16,7 @@
         @if (kind() === 'vuelos') { <p>{{ row['airline'] }} · {{ row['direct'] ? 'Directo' : 'Con escalas' }}</p><p>{{ row['departure'] | date:'medium' }}</p><p>{{ row['availableSeats'] }} asientos disponibles</p> }
         @if (kind() === 'hoteles') { <p>{{ row['city'] }}, {{ row['country'] }} · {{ row['stars'] }} estrellas</p><p>{{ row['description'] }}</p><p>{{ row['hasBreakfast'] ? 'Desayuno incluido' : 'Sin desayuno' }}</p> }
         @if (kind() === 'paquetes') { <p>{{ row['destinationDetails']?.title }} · {{ row['nights'] }} noches</p><p>{{ row['flightDetails']?.airline }} · {{ row['hotelDetails']?.name }}</p><p>{{ row['description'] }}</p> }
-        <div class="offer-footer"><div><strong>{{ row['price'] ?? row['pricePerNight'] | currency:'MXN':'symbol':'1.2-2' }}</strong><small>{{ kind() === 'hoteles' ? 'por noche / habitación' : 'por viajero' }}</small></div><button [disabled]="unavailable(row)" (click)="open(row)">{{ unavailable(row) ? 'No disponible' : kind()==='vuelos' ? 'Elegir ida' : 'Reservar' }}</button></div>
+        <div class="offer-footer"><div><strong>{{ row['price'] ?? row['pricePerNight'] | currency:'MXN':'symbol':'1.2-2' }}</strong><small>{{ kind() === 'hoteles' ? 'por noche / habitación' : 'por viajero' }}</small></div><button [disabled]="unavailable(row)" (click)="open(row)">{{ unavailable(row) ? 'No disponible' : kind()==='vuelos' ? 'Elegir ida' : kind()==='hoteles' ? 'Ver hotel' : 'Ver paquete' }}</button></div>
       </div></article>
     } @empty { @if (!loading()) { <p class="empty">No hay ofertas publicadas que coincidan. Prueba otra búsqueda.</p> } }
   </div>
@@ -25,15 +26,41 @@
     </div></div>
   } @else { <p class="login-note"><a routerLink="/login">Inicia sesión</a> para reservar y guardar favoritos.</p> }
 </section>
-@if(step()){
-<div class="booking-overlay"><section class="booking-dialog" role="dialog" aria-modal="true"><button class="subtle" (click)="step.set('')" [disabled]="busy()">Cerrar</button>
+}@else{
+<a class="back-link" [routerLink]="['/goruta',kind()]">← Volver a {{kind()}}</a>
+@if(loading()){<p role="status">Cargando…</p>}
 @if(error()){<p class="alert" role="alert">{{error()}}</p>}
+@if(selected();as row){
+  <header class="detail-heading">
+    <span class="eyebrow">{{kind()==='hoteles'?'ALOJAMIENTO':kind()==='paquetes'?'VUELO + HOTEL':'ITINERARIO'}}</span>
+    <h1>{{title(row)}}</h1>
+    @if(kind()==='hoteles'){<p><b class="stars">{{'★'.repeat(row['stars'])}}</b> · {{row['city']}}, {{row['country']}}</p>}
+    @if(kind()==='paquetes'){<p>{{row['destinationDetails']?.title}} · {{row['nights']}} noches</p>}
+    @if(kind()==='vuelos'){<p>{{row['airline']}} · {{row['departure'] | date:'dd/MM/yyyy · HH:mm'}} · {{row['direct']?'Directo':'Con escalas'}}</p>}
+  </header>
+  @if(kind()!=='vuelos' && (step()==='estancia' || step()==='hotel')){
+    <figure class="cover"><img [src]="photo(row)" [alt]="title(row)"></figure>
+  }
+}
+<div class="trip-layout"><section class="trip-panel" aria-live="polite">
 @switch(step()){
+@case('estancia'){
+  @if(selected();as hotel){
+    <h2>Conoce el alojamiento</h2><p>{{hotel['description']}}</p>
+    <ul class="amenities">
+      @if(hotel['wifi']){<li>Wi-Fi</li>}@if(hotel['pool']){<li>Piscina</li>}
+      @if(hotel['hasBreakfast']){<li>Desayuno incluido</li>}@if(hotel['hasFreeCancel']){<li>Cancelación gratuita</li>}
+    </ul>
+    <h2>Elige tu estancia</h2><div class="date-pair">
+      <label>Entrada<input type="date" [(ngModel)]="checkIn"></label><label>Salida<input type="date" [min]="checkIn" [(ngModel)]="checkOut"></label></div>
+    <button [disabled]="!(nights()>0) || unavailable(hotel)" (click)="step.set('pasajeros')">Continuar con esta estancia</button>
+  }
+}
 @case('hotel'){<h2>1 · Elige tu hotel</h2><p>{{selected()?.['nights']}} noches incluidas en el precio del paquete.</p>
 @for(h of options('hoteles');track h.id){<label class="choice"><input type="radio" name="hotel" [(ngModel)]="chosenHotel" [value]="h.id"><img [src]="photo(h)" alt=""><span>{{h['name']}} · {{h['stars']}} estrellas<br>{{h['description']}}</span></label>}
-<button (click)="step.set('vuelo')">Elegir vuelo</button>}
+<button [disabled]="!options('hoteles').length || !chosenHotel" (click)="step.set('vuelo')">Elegir vuelo</button>}
 @case('vuelo'){<h2>2 · Elige tu vuelo</h2>@for(f of options('vuelos');track f.id){<label class="choice"><input type="radio" name="flight" [ngModel]="chosenFlight" (ngModelChange)="selectFlight($event)" [value]="f.id">@if(logo(f)){<img class="brand" [src]="logo(f)" alt="">}<span>{{title(f)}} · {{f['airline']}}<br>{{f['departure'] | date:'medium'}} · {{f['availableSeats']}} asientos</span></label>}
-<button class="subtle" (click)="step.set('hotel')">Volver</button> <button (click)="itineraryNext()">Continuar</button>}
+<button class="subtle" (click)="step.set('hotel')">Volver</button> <button [disabled]="!options('vuelos').length || !chosenFlight" (click)="itineraryNext()">Continuar</button>}
 @case('regreso'){
   <span class="eyebrow">GORUTA · VIAJE REDONDO</span><h2>Selecciona tu vuelo de regreso</h2>
   @if(flight(chosenFlight);as out){<p><strong>Ida seleccionada</strong><br>{{legTitle(out)}}</p>}
@@ -42,20 +69,50 @@
     @if(logo(f)){<img class="brand" [src]="logo(f)" alt="">}
     <span><strong>{{title(f)}}</strong><br>{{f['airline']}} · {{f['departure'] | date:'dd/MM/yyyy HH:mm'}}<br>{{f['price'] | currency:'MXN'}} por pasajero</span></label>
   }@empty{<p>No hay regresos publicados para esta ruta y fecha. Puedes elegir otra ida o buscar solo ida.</p>}
-  <button class="subtle" (click)="step.set(kind()==='paquetes'?'vuelo':'')">Cambiar ida</button>
+  <button class="subtle" (click)="kind()==='paquetes'?step.set('vuelo'):router.navigate(['/goruta/vuelos'])">Cambiar ida</button>
   <button [disabled]="!returnId" (click)="step.set('pasajeros')">Continuar</button>
 }
-@case('pasajeros'){<h2>Pasajeros</h2><p>{{title(selected()!)}} · {{selected()?.['price'] ?? selected()?.['pricePerNight'] | currency:'MXN'}}</p>
+@case('pasajeros'){@if(!auth.user()){
+  <h2>{{kind()==='hoteles'?'Datos de los huéspedes':'Datos de los pasajeros'}}</h2>
+  <p>Inicia sesión para guardar tu reserva en GoRuta.</p><button (click)="requireLogin()">Iniciar sesión</button>
+}@else{<h2>{{kind()==='hoteles'?'Huéspedes':'Pasajeros'}}</h2><p>{{title(selected()!)}} · {{selected()?.['price'] ?? selected()?.['pricePerNight'] | currency:'MXN'}}</p>
 @if(flight(returnId);as back){<p><strong>Regreso</strong> · {{legTitle(back)}}<br>{{back['price'] | currency:'MXN'}} por pasajero</p><p>Total para {{names.length}} viajero(s) <strong>{{(+selected()!['price'] + +back['price'])*names.length | currency:'MXN'}}</strong></p><button class="subtle" (click)="step.set('regreso')">Cambiar regreso</button>}
-@for(n of names; track $index){<label>Nombre completo del pasajero {{$index+1}}<input [(ngModel)]="names[$index]" maxlength="120"></label>}
+@for(n of names; track $index){<label>Nombre completo del {{kind()==='hoteles'?'huésped':'pasajero'}} {{$index+1}}<input [(ngModel)]="names[$index]" maxlength="120"></label>}
 <button class="subtle" [disabled]="names.length>=20" (click)="names.push('')">+ Pasajero</button> <button class="subtle" [disabled]="names.length<=1" (click)="names.pop()">Quitar último</button>
 @if(kind()!=='vuelos'){<label>Entrada<input type="date" [(ngModel)]="checkIn"></label><label>Salida<input type="date" [(ngModel)]="checkOut"></label>}
-<button (click)="next()">{{kind()==='hoteles'?'Agregar al carrito':'Elegir asientos'}}</button>}
-@case('asientos'){<h2>Asientos de {{returnSeats?'regreso':'ida'}}</h2><p>Selecciona uno por pasajero. Los grises están ocupados.</p><div class="cabin"><strong>✈ Cabina delantera</strong><div class="seats">@for(s of seatList();track s){<button [class.chosen]="picked().includes(s)" [disabled]="!freeSeats().includes(s)" (click)="toggle(s)">{{s}}</button>}</div></div>
+<button (click)="next()">{{kind()==='hoteles'?'Agregar al carrito':'Elegir asientos'}}</button>}}
+@case('asientos'){<h2>Asientos de {{returnSeats?'regreso':'ida'}}</h2><p>Selecciona uno por pasajero. Los grises están ocupados.</p><div class="airfield">
+  <svg class="airframe" viewBox="0 0 600 760" preserveAspectRatio="none" aria-hidden="true">
+    <g stroke="#73909f" stroke-width="2" stroke-linejoin="round">
+      <path fill="#b6cbd2" d="M210 280 12 445 5 477 205 409 M390 280 588 445 595 477 395 409"/>
+      <path fill="#0c7984" d="M237 610 138 701 137 722 267 686 L300 748 333 686 463 722 462 701 363 610"/>
+      <path fill="#fafcfc" d="M300 9 C257 10 152 75 149 143 L149 585 Q151 653 254 699 L300 748 346 699 Q449 653 451 585 L451 143 C448 75 343 10 300 9Z"/>
+      <path fill="#31576b" d="M255 62 Q300 30 345 62 L335 72 Q300 51 265 72Z"/>
+      <path fill="#117a82" d="M300 745 282 674 300 642 318 674Z"/>
+    </g>
+  </svg><div class="seats">@for(s of seatList();track s){<button [attr.aria-pressed]="picked().includes(s)" [class.chosen]="picked().includes(s)" [disabled]="!freeSeats().includes(s)" (click)="toggle(s)">{{s}}</button>}</div></div>
 @for(n of names;track $index){<p>{{n}} · {{picked()[$index] || 'Por seleccionar'}}</p>}<button [disabled]="busy() || picked().length!==names.length" (click)="finishSeats()">{{returnId && !returnSeats?'Elegir asientos de regreso':'Agregar al carrito'}}</button>}
 @case('carrito'){<h2>Tu carrito</h2>@for(x of cart();track $index){<article><strong>{{x.title}}</strong><p>{{x.item.passengers.join(', ')}} · {{x.amount | currency:'MXN'}}</p>@if(x.item.seats.length){<p>Asientos {{x.item.seats.join(', ')}}</p>}@if(x.item.checkIn){<p>{{x.item.checkIn}} al {{x.item.checkOut}}</p>}@if(x.item.chosenFlight){<p>Vuelo {{x.item.chosenFlight}} · Hotel {{x.item.chosenHotel}}</p>}<button class="subtle" (click)="remove($index)">Quitar</button></article>}@empty{<p>Tu carrito está vacío.</p>}
-<button class="subtle" (click)="step.set('')">Seguir explorando</button> <button [disabled]="!cart().length" (click)="step.set('pago')">Ir al checkout</button>}
-@case('pago'){<h2>Checkout</h2>@for(x of cart();track $index){<p>{{x.title}} · {{x.amount | currency:'MXN'}}</p>}<p>Tarifa base {{base() | currency:'MXN'}}</p><p>Impuesto de demostración incluido (16 %) {{total()-base() | currency:'MXN'}}</p><h3>Total {{total() | currency:'MXN'}}</h3><p>Elige tu método de pago simulado</p><div class="payments">@for(m of ['PayPal','Mastercard','Visa'];track m){<button [class.subtle]="method!==m" (click)="method=m">{{m==='Mastercard'?'🔴🟠':m==='Visa'?'💳':'🅿'}} {{m}}</button>}</div><button [disabled]="busy()" (click)="pay()">Confirmar pago simulado</button>}
+<button class="subtle" routerLink="/goruta/vuelos">Seguir explorando</button> <button [disabled]="!cart().length" routerLink="/goruta/checkout">Ir al checkout</button>}
+@case('pago'){<h2>Checkout</h2>@for(x of cart();track $index){<p>{{x.title}} · {{x.amount | currency:'MXN'}}</p>}<p>Tarifa base {{base() | currency:'MXN'}}</p><p>Impuesto de demostración incluido (16 %) {{total()-base() | currency:'MXN'}}</p><h3>Total {{total() | currency:'MXN'}}</h3><p>Elige tu método de pago simulado</p><div class="payments">@for(m of ['PayPal','Mastercard','Visa'];track m){<button [class.subtle]="method!==m" (click)="method=m">{{m==='Mastercard'?'🔴🟠':m==='Visa'?'💳':'🅿'}} {{m}}</button>}</div><button [disabled]="busy() || !cart().length" (click)="pay()">Confirmar pago simulado</button>}
 @case('confirmado'){<h2>Reserva confirmada</h2>@for(r of receipt();track r.id){<p>Reserva #{{r.id}} · {{r.method}} · {{r.total | currency:'MXN'}}</p>}}
-}</section></div>}
+}</section>
+@if(selected();as row){
+  <aside class="trip-summary"><span class="eyebrow">TU RESERVA</span><h2>Resumen del viaje</h2>
+    <p>{{title(row)}}</p>
+    @if(kind()==='paquetes'){
+      @if(offers()['hoteles'];as hotels){@for(h of hotels;track h.id){@if(h.id===chosenHotel){<div>Hotel <b>{{h['name']}}</b></div>}}}
+      @if(flight(chosenFlight);as f){<div>Vuelo <b>{{f['airline']}} · {{f['departure'] | date:'HH:mm'}}</b></div>}
+    }
+    @if(kind()==='hoteles'){<div>Precio por noche <b>{{row['pricePerNight'] | currency:'MXN'}}</b></div>
+      @if(nights()>0){<div>{{nights()}} noche(s) <strong>{{row['pricePerNight']*nights() | currency:'MXN'}}</strong></div>}
+    }@else{
+      <div>{{kind()==='vuelos'?'Ida':'Paquete'}} por persona <b>{{row['price'] | currency:'MXN'}}</b></div>
+      @if(flight(returnId);as back){<div>Regreso por persona <b>{{back['price'] | currency:'MXN'}}</b></div>}
+      <div>Total · {{names.length}} viajero(s) <strong>{{(+row['price'] + +(flight(returnId)?.['price'] || 0))*names.length | currency:'MXN'}}</strong></div>
+    }
+  </aside>
+}
+</div>
 
+}

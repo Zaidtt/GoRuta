@@ -1,7 +1,7 @@
 import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { Auth } from '../../core/auth';
 import { Api } from '../../core/api';
@@ -15,6 +15,7 @@ import { Api } from '../../core/api';
 })
 export class Login {
   private auth = inject(Auth);
+  private route = inject(ActivatedRoute);
   private api = inject(Api);
   // Selected user role
   selectedRole = signal<'traveler' | 'admin'>('traveler');
@@ -69,7 +70,8 @@ export class Login {
     this.auth.login(currentEmail, this.password(), this.rememberMe()).subscribe({
       next: session => {
         this.isLoading.set(false);
-        this.router.navigate([session.user.role === 'admin' ? '/admin' : '/']);
+        const next=this.route.snapshot.queryParamMap.get('volver');
+        this.router.navigateByUrl(next?.startsWith('/goruta/') ? next : session.user.role==='admin'?'/admin':'/');
       },
       error: error => { this.isLoading.set(false); this.errorMessage.set(this.api.error(error)); }
     });

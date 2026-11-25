@@ -1,7 +1,7 @@
 import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin, firstValueFrom } from 'rxjs';
 import { Api, Row } from '../../core/api';
 import { Auth } from '../../core/auth';
@@ -9,9 +9,13 @@ import { Auth } from '../../core/auth';
 @Component({ selector: 'app-catalog', standalone: true, imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './catalog.html', styleUrl: './catalog.scss' })
 export class Catalog {
-  api = inject(Api); auth = inject(Auth); private router = inject(Router);
+  api = inject(Api); auth = inject(Auth); router = inject(Router);
   kind = input<'vuelos' | 'hoteles' | 'paquetes'>('vuelos'); query = input('');
   kindChange = output<'vuelos' | 'hoteles' | 'paquetes'>();
+  route = inject(ActivatedRoute);
+  standalonePage = input(false);
+  recordCode = input('');
+  initialStep = input('');
   categories: ('vuelos' | 'hoteles' | 'paquetes')[] = ['vuelos', 'hoteles', 'paquetes'];
   offers = signal<Record<string, Row[]>>({ vuelos: [], hoteles: [], paquetes: [] });
   bookings = signal<Row[]>([]); loading = signal(false); busy = signal(false); error = signal(''); notice = signal('');
@@ -38,10 +42,32 @@ export class Catalog {
     effect(() => this.search.set(this.query()), { allowSignalWrites: true });
     effect(() => { if (this.auth.user()) this.loadBookings(); else this.bookings.set([]); });
     try {this.cart.set(JSON.parse(sessionStorage.getItem(this.cartKey()) || '[]'));} catch {this.cart.set([]);}
+  }
+  ngOnInit(){
+    if(this.standalonePage()) window.scrollTo({top:0,behavior:'instant'});
+    if(this.initialStep()){this.step.set(this.initialStep());return;}
     this.reload();
   }
   reload() {
     this.loading.set(true); this.error.set('');
+    if(this.recordCode()){
+      const category=this.kind();
+      const extras:Record<string,ReturnType<Api['all']>>={};
+      if(category!=='hoteles') extras['vuelos']=this.api.all('goruta/vuelos');
+      if(category==='paquetes') extras['hoteles']=this.api.all('goruta/hoteles');
+      forkJoin({detail:this.api.get<Row>('goruta/'+category+'/'+encodeURIComponent(this.recordCode())+'/'),...extras}).subscribe({
+        next: result=>{
+          const data=result as Record<string,any>;
+          this.offers.set({vuelos:data['vuelos']||[],hoteles:data['hoteles']||[],paquetes:[]});
+          this.roundTrip=this.route.snapshot.queryParamMap.get('viaje')!=='ida';
+          this.initialize(data['detail']);
+          this.resumeAfterLogin();
+          this.loading.set(false);
+        },
+        error:e=>{this.error.set(e.status===404?'Esta oferta ya no está disponible.':this.api.error(e));this.loading.set(false);}
+      });
+      return;
+    }
     forkJoin({ vuelos: this.api.all('flights'), hoteles: this.api.all('hotels'), paquetes: this.api.all('packages') }).subscribe({
       next: offers => { this.offers.set(offers); this.loading.set(false); },
       error: error => { this.error.set(this.api.error(error)); this.loading.set(false); }
@@ -82,18 +108,49 @@ export class Catalog {
     this.step.set(this.roundTrip?'regreso':'pasajeros');
   }
   open(row:Row) {
-    if (!this.auth.user()) { this.router.navigate(['/login']); return; }
+    this.router.navigate(['/goruta',this.kind(),row.id],{queryParams:this.roundTrip?{}:{viaje:'ida'}});
+  }
+  requireLogin(){
+    if(this.auth.user()) return true;
+    if(this.selected()){
+      sessionStorage.setItem('goruta.loginDraft',JSON.stringify({url:this.router.url,hotel:this.chosenHotel,
+        flight:this.chosenFlight,back:this.returnId,checkIn:this.checkIn,checkOut:this.checkOut}));
+    }
+    this.router.navigate(['/login'],{queryParams:{volver:this.router.url}});
+    return false;
+  }
+  resumeAfterLogin(){
+    const raw=sessionStorage.getItem('goruta.loginDraft');
+    if(!raw || !this.auth.user())return;
+    sessionStorage.removeItem('goruta.loginDraft');
+    try {
+      const draft=JSON.parse(raw);
+      if(draft.url!==this.router.url)return;
+      if(this.kind()==='paquetes'){
+        if(!this.options('hoteles').some(h=>h.id===draft.hotel) || !this.options('vuelos').some(f=>f.id===draft.flight))return;
+        this.chosenHotel=draft.hotel;this.selectFlight(draft.flight);
+      }
+      this.checkIn=draft.checkIn;this.checkOut=draft.checkOut;
+      if(this.kind()!=='hoteles' && this.roundTrip){
+        if(!this.returns().some(f=>f.id===draft.back))return;
+        this.returnId=draft.back;
+      }
+      this.step.set('pasajeros');
+    } catch {return;}
+  }
+  initialize(row:Row){
     this.returnId=''; this.returnSeats=false; this.outboundSeats=[];
     this.selected.set(row); this.error.set(''); this.names=['']; this.picked.set([]);
     this.chosenFlight=String(row['flight'] ?? row.id); this.chosenHotel=String(row['hotel'] ?? row.id);
     const departure=row['flightDetails']?.departure || row['departure'];
     this.checkIn=(departure || new Date(Date.now()+86400000).toISOString()).slice(0,10);
     this.checkOut=new Date(Date.parse(this.checkIn)+(row['nights'] || 1)*86400000).toISOString().slice(0,10);
-    this.step.set(this.kind()==='paquetes'?'hotel':this.kind()==='vuelos' && this.roundTrip?'regreso':'pasajeros');
+    this.step.set(this.kind()==='hoteles'?'estancia':this.kind()==='paquetes'?'hotel':this.kind()==='vuelos' && this.roundTrip?'regreso':'pasajeros');
   }
   options(kind:string) { const row=this.selected()!; return this.offers()[kind].filter(x=>(x.id===row[kind==='hoteles'?'hotel':'flight'] || x['destinationRef']===row['destination']) && x['isPublished'] && x['status']!=='Agotado' && x['status']!=='Lleno' && (!x['departure'] || Date.parse(x['departure'])>Date.now())); }
   selectFlight(id:string) { this.chosenFlight=id; const f=this.offers()['vuelos'].find(x=>x.id===id); if(f){this.checkIn=f['departure'].slice(0,10);this.checkOut=new Date(Date.parse(this.checkIn)+this.selected()!['nights']*86400000).toISOString().slice(0,10);} }
   async next() {
+    if(!this.requireLogin())return;
     if(this.names.some(n=>n.trim().length<2)){this.error.set('Completa el nombre de cada pasajero.');return;}
     this.error.set('');
     if(this.kind()!=='vuelos' && (!(this.checkOut>this.checkIn) || (this.kind()==='paquetes' && this.nights()!==this.selected()!['nights']))){this.error.set('Revisa las fechas y las noches de estancia.');return;}
@@ -103,7 +160,7 @@ export class Catalog {
   async loadSeats(id:string, returning:boolean) {
     if(this.busy())return;
     this.busy.set(true);
-    try { const info=await firstValueFrom(this.api.get<{layout:string[];available:string[]}>('flights/'+encodeURIComponent(id)+'/seats/'));if(info.available.length<this.names.length){this.error.set('Este tramo ya no tiene suficientes asientos.');return;}
+    try { const info=await firstValueFrom(this.api.get<{layout:string[];available:string[]}>('goruta/vuelos/'+encodeURIComponent(id)+'/asientos/'));if(info.available.length<this.names.length){this.error.set('Este tramo ya no tiene suficientes asientos.');return;}
       this.returnSeats=returning;this.picked.set([]);this.seatList.set(info.layout);this.freeSeats.set(info.available);this.step.set('asientos'); }
     catch(e){this.error.set(this.api.error(e));}finally{this.busy.set(false);}
   }
@@ -128,16 +185,16 @@ export class Catalog {
       entries.push({title:'Regreso · '+this.legTitle(inbound), group, amount:Number(inbound['price'])*this.names.length,
         item:{type:'Vuelo',flight:inbound.id,passengers:[...this.names],seats:[...this.picked()]}});
     }
-    this.persist([...this.cart(),...entries]);this.selected.set(null);this.step.set('carrito');
+    this.persist([...this.cart(),...entries]);this.router.navigate(['/goruta/carrito']);
   }
   legTitle(f:Row){return this.title(f)+' · '+f['airline']+' · '+new Date(f['departure']).toLocaleString('es-MX');}
   remove(i:number){const group=this.cart()[i].group;this.persist(this.cart().filter((x,idx)=>group?x.group!==group:idx!==i));}
   total(){return this.cart().reduce((n,x)=>n+x.amount,0);}
   base(){return this.cart().reduce((n,x)=>n+Math.round(x.amount/1.16*100)/100,0);}
   async pay(){
-    if(this.busy() || !this.cart().length)return;
+    if(this.busy() || !this.cart().length || !this.requireLogin())return;
     this.busy.set(true);this.error.set('');
-    try{const result=await firstValueFrom(this.api.post<any[]>('checkout/',{payment:this.method,items:this.cart().map(x=>x.item)}));this.receipt.set(result);this.persist([]);this.step.set('confirmado');this.reload();this.loadBookings();}
+    try{const result=await firstValueFrom(this.api.post<any[]>('checkout/',{payment:this.method,items:this.cart().map(x=>x.item)}));this.receipt.set(result);this.persist([]);this.step.set('confirmado');}
     catch(e){this.error.set(this.api.error(e));}finally{this.busy.set(false);}
   }
 
