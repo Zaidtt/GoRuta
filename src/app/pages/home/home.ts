@@ -33,6 +33,8 @@ import { Catalog } from './catalog';
   styleUrl: './home.scss'
 })
 export class Home {
+  morning=signal(false); baggage=signal(false);
+  wifi=signal(false); pool=signal(false); toggle=(value:boolean)=>!value;
   api = inject(Api); auth = inject(Auth);
   catalogQuery = signal('');
   catalogSearchText = signal('');
@@ -221,6 +223,7 @@ export class Home {
   }
 
   resetFilters() {
+    this.morning.set(false);this.baggage.set(false);this.wifi.set(false);this.pool.set(false);this.filterDirectFlights.set(false);
     this.selectedRegion.set('todos');
     this.maxPrice.set(2500);
     this.filterMinStars.set(0);

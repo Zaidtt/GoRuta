@@ -43,6 +43,7 @@ export class Admin {
       { key: 'price', label: 'Precio por viajero (MXN)', type: 'number', min: 0, required: true },
       { key: 'availableSeats', label: 'Asientos disponibles', type: 'number', min: 0, required: true },
       { key: 'status', label: 'Estado', options: ['Activo', 'Programado', 'Lleno'] },
+      { key: 'carryOn', label: 'Equipaje de mano incluido', type: 'checkbox' },
       { key: 'direct', label: 'Vuelo directo', type: 'checkbox' },
       { key: 'isPublished', label: 'Publicado en la web', type: 'checkbox' }],
     hotels: [
@@ -50,6 +51,8 @@ export class Admin {
       { key: 'name', label: 'Nombre del hotel', required: true }, { key: 'city', label: 'Ciudad', required: true },
       { key: 'country', label: 'País', required: true },
       { key: 'destinationRef', label: 'Destino del catálogo (opcional)', source: 'destinations' },
+      { key: 'wifi', label: 'Wifi', type: 'checkbox' },
+      { key: 'pool', label: 'Piscina', type: 'checkbox' },
       { key: 'description', label: 'Descripción' },
       { key: 'pricePerNight', label: 'Precio por noche / habitación (MXN)', type: 'number', min: 0, required: true },
       { key: 'stars', label: 'Estrellas', type: 'number', min: 1, max: 5 },

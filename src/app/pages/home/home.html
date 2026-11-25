@@ -224,13 +224,13 @@
               </label>
 
               <label class="modern-checkbox">
-                <input type="checkbox" checked />
+                <input type="checkbox" [checked]="baggage()" (change)="baggage.update(toggle)" />
                 <span class="check-box"></span>
                 <span class="check-label">Incluye equipaje de mano</span>
               </label>
 
               <label class="modern-checkbox">
-                <input type="checkbox" />
+                <input type="checkbox" [checked]="morning()" (change)="morning.update(toggle)" />
                 <span class="check-box"></span>
                 <span class="check-label">Salidas por la mañana</span>
               </label>
@@ -313,13 +313,13 @@
               </label>
 
               <label class="modern-checkbox">
-                <input type="checkbox" checked />
+                <input type="checkbox" [checked]="wifi()" (change)="wifi.update(toggle)" />
                 <span class="check-box"></span>
                 <span class="check-label">Wifi de Alta Velocidad</span>
               </label>
 
               <label class="modern-checkbox">
-                <input type="checkbox" checked />
+                <input type="checkbox" [checked]="pool()" (change)="pool.update(toggle)" />
                 <span class="check-box"></span>
                 <span class="check-label">Piscina / Spa de Lujo</span>
               </label>
@@ -540,9 +540,9 @@
                       <button
                         type="button"
                         class="btn-book-card"
-                        (click)="showOffers(dest.title)"
+                        (click)="setTab(dest.type === 'Vuelos' ? 'vuelos' : dest.type === 'Hoteles' ? 'hoteles' : 'paquetes'); showOffers(dest.title)"
                       >
-                        Reservar
+                        Ver ofertas
                       </button>
                     </div>
                   </div>
@@ -584,7 +584,7 @@
           </div>
         </section>
 
-        <app-catalog [kind]="activeTab()" [query]="catalogQuery()" (kindChange)="setTab($event)" />
+        <app-catalog [morning]="morning()" [baggage]="baggage()" [destinations]="destinations()" [region]="selectedRegion()" [limit]="maxPrice()" [stars]="filterMinStars()" [breakfast]="filterBreakfast()" [freeCancel]="filterFreeCancellation()" [direct]="filterDirectFlights()" [wifi]="wifi()" [pool]="pool()" [kind]="activeTab()" [query]="catalogQuery()" (kindChange)="setTab($event)" />
       </section>
 
     </div>

@@ -16,3 +16,13 @@ button { border:0; border-radius:9px; background:#e85b49; color:white; padding:.
 .booking-overlay { position:fixed; inset:0; z-index:1000; background:#10263cab; display:flex; align-items:center; justify-content:center; padding:1rem; }
 .booking-dialog { background:white; padding:2rem; border-radius:18px; max-width:480px; width:100%; max-height:90vh; overflow:auto; } .booking-dialog label { display:grid; gap:.4rem; margin:1rem 0; } .dialog-actions { display:flex; gap:1rem; justify-content:flex-end; margin-top:1.5rem; }
 @media(max-width:600px) { .catalog-heading { align-items:flex-start; } .offer-grid { grid-template-columns:1fr; } }
+
+.booking-dialog {background:#fff;color:#152939; width:min(96vw,610px)} .booking-dialog h2,.booking-dialog h3,.booking-dialog label,.booking-dialog p,.offer-card h3,.own-catalog h2 {color:#172d41}
+.booking-dialog input {color:#122433;background:white}.choice {display:flex!important;align-items:center;padding:.65rem;border:1px solid #b4c5d0;border-radius:.6rem}.choice input {width:auto}.choice img{width:70px;height:55px;object-fit:cover}.cabin{margin:1rem auto;max-width:370px;border:3px solid #9fb5c5;border-radius:45% 45% 16px 16px;padding:2.8rem 1rem 1rem;background:#edf4f6;text-align:center}.seats{margin-top:1rem;display:grid;grid-template-columns:repeat(3,1fr) .6fr repeat(3,1fr);gap:4px}.seats button{padding:.45rem .1rem;background:#145875;color:white}.seats button:nth-child(6n+4){grid-column:5}.seats button.chosen{background:#117048}.seats button:disabled{background:#9daab0;color:#293742}.payments{display:flex;flex-wrap:wrap;gap:.5rem;margin:1rem 0}.booking-dialog article{padding:.75rem 0;border-bottom:1px solid #ccd5df}
+
+.flight-list {grid-template-columns:1fr}
+.flight-list .offer-card {display:grid;grid-template-columns:minmax(110px,20%) 1fr}
+.carrier {display:grid;align-content:center;justify-items:center;gap:.5rem;padding:.8rem;background:#f1f7f8;font-weight:700;color:#153f50;text-align:center}
+.carrier img,.choice img.brand {width:48px;height:48px;object-fit:contain}
+.booking-dialog .eyebrow {display:block;margin-top:1rem}
+.choice:has(input:checked) {border-color:#087e8b;background:#effafa}
