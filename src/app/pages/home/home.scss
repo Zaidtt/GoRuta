@@ -98,27 +98,6 @@
   }
 }
 
-.nav-brand {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  text-decoration: none;
-  color: #ffffff;
-
-  .brand-plane {
-    font-size: 1.4rem;
-  }
-
-  .brand-text {
-    font-family: var(--font-heading);
-    font-size: 1.35rem;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    color: #ffffff;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  }
-}
-
 .nav-links {
   display: flex;
   align-items: center;
@@ -707,6 +686,7 @@
 }
 
 .cmd-action-bar {
+  > span { color: #f1f5f9; }
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1188,4 +1168,12 @@
       background: #94a3b8;
     }
   }
+}
+
+.hero-content {position:absolute;inset:50% 0 auto;transform:translateY(-50%);margin:0;padding:0 1.25rem}
+.main-content > .destinations-section {max-width:1380px;margin:0 auto clamp(2rem,5vw,4rem)}
+@media(max-width:768px){
+  .nav-bar {flex-wrap:wrap;gap:.5rem}
+  .nav-links {display:flex;order:3;width:100%;justify-content:space-between;gap:.35rem;flex-wrap:wrap}
+  .nav-links .nav-link {font-size:.85rem}
 }

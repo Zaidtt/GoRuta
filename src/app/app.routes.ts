@@ -1,8 +1,8 @@
 import { Routes } from '@angular/router';
 import { Home } from './pages/home/home';
 import { Login } from './pages/login/login';
-import { Admin } from './pages/admin/admin';
-import { adminGuard } from './core/auth';
+
+import { accountGuard, adminGuard } from './core/auth';
 
 import { TravelPage } from './pages/home/travel-page';
 
@@ -16,19 +16,21 @@ export const routes: Routes = [
   {
     path: '',
     component: Home,
-    title: 'TravelBooking - Descubre el Mundo con Experiencias Inolvidables'
+    title: 'GoRuta - Descubre el Mundo con Experiencias Inolvidables'
   },
   {
     path: 'login',
     component: Login,
-    title: 'Iniciar Sesión - TravelBooking'
+    title: 'Iniciar Sesión - GoRuta'
   },
   {
     path: 'admin',
     canActivate: [adminGuard],
-    component: Admin,
-    title: 'Panel de Administración - TravelBooking'
+    loadComponent: () => import('./pages/admin/admin').then(m => m.Admin),
+    title: 'Panel de Administración - GoRuta'
   },
+  {path:'crear-cuenta',loadComponent:()=>import('./pages/login/register').then(m=>m.Register),title:'Crear cuenta | GoRuta'},
+  {path:'goruta/configuracion',canActivate:[accountGuard],loadComponent:()=>import('./pages/login/account-settings').then(m=>m.AccountSettings),title:'Mi cuenta | GoRuta'},
   ...catalogRoutes,
   {path:'goruta', redirectTo:'goruta/vuelos', pathMatch:'full'},
   {path:'goruta/carrito', component:TravelPage, data:{step:'carrito'}, title:'Mi carrito | GoRuta'},

@@ -1,24 +1,43 @@
 @if(!recordCode() && !initialStep()){
 <section class="own-catalog" id="catalogo">
-  <div class="catalog-heading"><div><span class="eyebrow">NUESTRO CATÁLOGO</span><h2>{{ kind() === 'vuelos' ? 'Vuelos disponibles' : kind() === 'hoteles' ? 'Elige tu hotel' : 'Paquetes a tu medida' }}</h2><p>Ofertas seleccionadas por GoRuta. Precios en MXN.</p></div><button class="subtle" (click)="reload()">Actualizar</button></div>
-  <label class="catalog-filter">Buscar en {{ kind() }}<input type="search" [ngModel]="search()" (ngModelChange)="search.set($event)" placeholder="Destino, nombre o ruta"/></label>
-  <button routerLink="/goruta/carrito">🛒 Mi carrito ({{cart().length}})</button><div class="catalog-tabs">@for (category of categories; track category) { <button [class.subtle]="kind() !== category" (click)="kindChange.emit(category)">{{ category | titlecase }}</button> }</div>
+  <header class="offer-header">
+    <h2>{{kind()==='vuelos'?'Vuelos disponibles':kind()==='hoteles'?'Alojamientos disponibles':'Paquetes de viaje'}}</h2>
+    <div class="offer-actions">
+      <button class="refresh-action" [disabled]="loading()" (click)="reload()" aria-label="Actualizar catálogo" title="Actualizar catálogo">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20 7v5h-5"/><path d="M19.5 11a7.5 7.5 0 1 0-1.8 6.2"/></svg>
+      </button>
+      <a class="cart-action" routerLink="/goruta/carrito">Mi carrito <b>{{cart().length}}</b></a>
+    </div>
+  </header>
+  <div class="catalog-controls">
+    <div class="category-switch" role="group" aria-label="Categoría">
+      @for(category of categories;track category){<button [attr.aria-pressed]="kind()===category" (click)="kindChange.emit(category)">{{category | titlecase}}</button>}
+    </div>
+    @if(kind()==='hoteles'){<stay-filters [value]="stay()" (apply)="applyStay($event)"/>}
+    @if(standalonePage() || kind()!=='hoteles'){<div class="filter-row">
+      @if(standalonePage()){<label class="search-control">Buscar en {{kind()}}
+        <input type="search" [ngModel]="search()" (ngModelChange)="search.set($event)" placeholder="Destino, nombre o ruta">
+      </label>}
+      @if(kind()!=='hoteles'){<fieldset class="journey-control"><legend>Tipo de viaje</legend><div>
+        <button [attr.aria-pressed]="roundTrip" (click)="roundTrip=true">Ida y regreso</button>
+        <button [attr.aria-pressed]="!roundTrip" (click)="roundTrip=false">Solo ida</button>
+      </div></fieldset>}
+    </div>}
+  </div>
+  @if(query()){<p>Resultados para <strong>{{query()}}</strong></p>}
   @if (error()) { <p class="alert" role="alert">{{ error() }}</p> }
   @if (notice()) { <p class="notice" role="status">{{ notice() }}</p> }
   @if (loading()) { <p role="status">Cargando ofertas…</p> }
-  @if(kind()!=='hoteles'){
-    <div class="catalog-tabs" aria-label="Tipo de viaje"><button [class.subtle]="!roundTrip" (click)="roundTrip=true">Ida y regreso</button><button [class.subtle]="roundTrip" (click)="roundTrip=false">Solo ida</button></div>
-    @if(kind()==='vuelos'){<h2>Selecciona tu vuelo de ida</h2>}
-  }
+  @if(!loading()){<div class="results-line"><strong>{{rows().length}} {{rows().length===1?'resultado':'resultados'}}</strong><span>Precios en MXN</span></div>}
   <div class="offer-grid" [class.flight-list]="kind()==='vuelos'">
     @for (row of rows(); track row.id) {
       <article class="offer-card">@if(kind()==='vuelos'){<div class="carrier">@if(logo(row)){<img [src]="logo(row)" [alt]="row['airline']">}{{row['airline']}}</div>}@else{<img [src]="photo(row)" [alt]="title(row)" loading="lazy"/>}<div class="offer-content"><h3>{{ title(row) }}</h3>
         @if (kind() === 'vuelos') { <p>{{ row['airline'] }} · {{ row['direct'] ? 'Directo' : 'Con escalas' }}</p><p>{{ row['departure'] | date:'medium' }}</p><p>{{ row['availableSeats'] }} asientos disponibles</p> }
-        @if (kind() === 'hoteles') { <p>{{ row['city'] }}, {{ row['country'] }} · {{ row['stars'] }} estrellas</p><p>{{ row['description'] }}</p><p>{{ row['hasBreakfast'] ? 'Desayuno incluido' : 'Sin desayuno' }}</p> }
+        @if (kind() === 'hoteles') { <p>{{ row['city'] }}, {{ row['country'] }} · {{ row['stars'] }} estrellas</p><p>{{row['stayType']}} · {{row['capacity']}} huéspedes · {{row['beds']}} cama(s)</p>@if(stayNights()>0){<p><strong>{{row['pricePerNight']*stayNights() | currency:'MXN'}}</strong> por {{stayNights()}} noches</p>}<p>{{ row['hasBreakfast'] ? 'Desayuno incluido' : 'Sin desayuno' }}</p> }
         @if (kind() === 'paquetes') { <p>{{ row['destinationDetails']?.title }} · {{ row['nights'] }} noches</p><p>{{ row['flightDetails']?.airline }} · {{ row['hotelDetails']?.name }}</p><p>{{ row['description'] }}</p> }
         <div class="offer-footer"><div><strong>{{ row['price'] ?? row['pricePerNight'] | currency:'MXN':'symbol':'1.2-2' }}</strong><small>{{ kind() === 'hoteles' ? 'por noche / habitación' : 'por viajero' }}</small></div><button [disabled]="unavailable(row)" (click)="open(row)">{{ unavailable(row) ? 'No disponible' : kind()==='vuelos' ? 'Elegir ida' : kind()==='hoteles' ? 'Ver hotel' : 'Ver paquete' }}</button></div>
       </div></article>
-    } @empty { @if (!loading()) { <p class="empty">No hay ofertas publicadas que coincidan. Prueba otra búsqueda.</p> } }
+    } @empty { @if (!loading()) { <p class="empty">No hay ofertas que coincidan con esta selección. <button class="subtle" (click)="search.set('');clearFilters.emit();applyStay(blankStay())">Limpiar búsqueda y filtros</button></p> } }
   </div>
   @if (auth.user()) {
     <div class="my-bookings"><h2>{{ auth.user()?.role === 'admin' ? 'Reservas del catálogo' : 'Mis reservas' }}</h2><div class="booking-list">
@@ -46,11 +65,8 @@
 @switch(step()){
 @case('estancia'){
   @if(selected();as hotel){
-    <h2>Conoce el alojamiento</h2><p>{{hotel['description']}}</p>
-    <ul class="amenities">
-      @if(hotel['wifi']){<li>Wi-Fi</li>}@if(hotel['pool']){<li>Piscina</li>}
-      @if(hotel['hasBreakfast']){<li>Desayuno incluido</li>}@if(hotel['hasFreeCancel']){<li>Cancelación gratuita</li>}
-    </ul>
+    @defer(on immediate){<hotel-guide [h]="hotel"/>}
+    @defer(on immediate){<stay-calendar [hotel]="hotel.id" [start]="checkIn" [end]="checkOut" (changeDates)="checkIn=$event[0];checkOut=$event[1]"/>}
     <h2>Elige tu estancia</h2><div class="date-pair">
       <label>Entrada<input type="date" [(ngModel)]="checkIn"></label><label>Salida<input type="date" [min]="checkIn" [(ngModel)]="checkOut"></label></div>
     <button [disabled]="!(nights()>0) || unavailable(hotel)" (click)="step.set('pasajeros')">Continuar con esta estancia</button>
@@ -58,6 +74,7 @@
 }
 @case('hotel'){<h2>1 · Elige tu hotel</h2><p>{{selected()?.['nights']}} noches incluidas en el precio del paquete.</p>
 @for(h of options('hoteles');track h.id){<label class="choice"><input type="radio" name="hotel" [(ngModel)]="chosenHotel" [value]="h.id"><img [src]="photo(h)" alt=""><span>{{h['name']}} · {{h['stars']}} estrellas<br>{{h['description']}}</span></label>}
+@for(h of options('hoteles');track h.id){@if(h.id===chosenHotel){@defer(on immediate){<hotel-guide [h]="h" [showImage]="true"/>}}}
 <button [disabled]="!options('hoteles').length || !chosenHotel" (click)="step.set('vuelo')">Elegir vuelo</button>}
 @case('vuelo'){<h2>2 · Elige tu vuelo</h2>@for(f of options('vuelos');track f.id){<label class="choice"><input type="radio" name="flight" [ngModel]="chosenFlight" (ngModelChange)="selectFlight($event)" [value]="f.id">@if(logo(f)){<img class="brand" [src]="logo(f)" alt="">}<span>{{title(f)}} · {{f['airline']}}<br>{{f['departure'] | date:'medium'}} · {{f['availableSeats']}} asientos</span></label>}
 <button class="subtle" (click)="step.set('hotel')">Volver</button> <button [disabled]="!options('vuelos').length || !chosenFlight" (click)="itineraryNext()">Continuar</button>}
@@ -81,20 +98,55 @@
 <button class="subtle" [disabled]="names.length>=20" (click)="names.push('')">+ Pasajero</button> <button class="subtle" [disabled]="names.length<=1" (click)="names.pop()">Quitar último</button>
 @if(kind()!=='vuelos'){<label>Entrada<input type="date" [(ngModel)]="checkIn"></label><label>Salida<input type="date" [(ngModel)]="checkOut"></label>}
 <button (click)="next()">{{kind()==='hoteles'?'Agregar al carrito':'Elegir asientos'}}</button>}}
-@case('asientos'){<h2>Asientos de {{returnSeats?'regreso':'ida'}}</h2><p>Selecciona uno por pasajero. Los grises están ocupados.</p><div class="airfield">
-  <svg class="airframe" viewBox="0 0 600 760" preserveAspectRatio="none" aria-hidden="true">
-    <g stroke="#73909f" stroke-width="2" stroke-linejoin="round">
-      <path fill="#b6cbd2" d="M210 280 12 445 5 477 205 409 M390 280 588 445 595 477 395 409"/>
-      <path fill="#0c7984" d="M237 610 138 701 137 722 267 686 L300 748 333 686 463 722 462 701 363 610"/>
-      <path fill="#fafcfc" d="M300 9 C257 10 152 75 149 143 L149 585 Q151 653 254 699 L300 748 346 699 Q449 653 451 585 L451 143 C448 75 343 10 300 9Z"/>
-      <path fill="#31576b" d="M255 62 Q300 30 345 62 L335 72 Q300 51 265 72Z"/>
-      <path fill="#117a82" d="M300 745 282 674 300 642 318 674Z"/>
-    </g>
-  </svg><div class="seats">@for(s of seatList();track s){<button [attr.aria-pressed]="picked().includes(s)" [class.chosen]="picked().includes(s)" [disabled]="!freeSeats().includes(s)" (click)="toggle(s)">{{s}}</button>}</div></div>
+@case('asientos'){<h2>Asientos de {{returnSeats?'regreso':'ida'}}</h2><p>Selecciona uno por pasajero. Los grises están ocupados.</p><div class="cabin-picker"><div class="plane-map">
+  <img src="images/cabina-goruta.jpg" alt="Plano del avión visto desde arriba">
+  @for(z of zones;track z;let i=$index){@if(zoneSeats(i).length){<button type="button" [style.top.%]="[26,50,72][i]" [attr.aria-pressed]="cabinZone===i" (click)="cabinZone=i">{{z}}</button>}}
+  </div><section class="zone-panel"><h3>Cabina {{zones[cabinZone].toLowerCase()}}</h3>
+    <p>Elige una zona en el plano y después tu asiento.</p>
+    <div class="seats">@for(s of zoneSeats(cabinZone);track s){<button [attr.aria-pressed]="picked().includes(s)" [class.chosen]="picked().includes(s)" [disabled]="!freeSeats().includes(s)" (click)="toggle(s)">{{s}}</button>}</div>
+  </section></div>
 @for(n of names;track $index){<p>{{n}} · {{picked()[$index] || 'Por seleccionar'}}</p>}<button [disabled]="busy() || picked().length!==names.length" (click)="finishSeats()">{{returnId && !returnSeats?'Elegir asientos de regreso':'Agregar al carrito'}}</button>}
 @case('carrito'){<h2>Tu carrito</h2>@for(x of cart();track $index){<article><strong>{{x.title}}</strong><p>{{x.item.passengers.join(', ')}} · {{x.amount | currency:'MXN'}}</p>@if(x.item.seats.length){<p>Asientos {{x.item.seats.join(', ')}}</p>}@if(x.item.checkIn){<p>{{x.item.checkIn}} al {{x.item.checkOut}}</p>}@if(x.item.chosenFlight){<p>Vuelo {{x.item.chosenFlight}} · Hotel {{x.item.chosenHotel}}</p>}<button class="subtle" (click)="remove($index)">Quitar</button></article>}@empty{<p>Tu carrito está vacío.</p>}
 <button class="subtle" routerLink="/goruta/vuelos">Seguir explorando</button> <button [disabled]="!cart().length" routerLink="/goruta/checkout">Ir al checkout</button>}
-@case('pago'){<h2>Checkout</h2>@for(x of cart();track $index){<p>{{x.title}} · {{x.amount | currency:'MXN'}}</p>}<p>Tarifa base {{base() | currency:'MXN'}}</p><p>Impuesto de demostración incluido (16 %) {{total()-base() | currency:'MXN'}}</p><h3>Total {{total() | currency:'MXN'}}</h3><p>Elige tu método de pago simulado</p><div class="payments">@for(m of ['PayPal','Mastercard','Visa'];track m){<button [class.subtle]="method!==m" (click)="method=m">{{m==='Mastercard'?'🔴🟠':m==='Visa'?'💳':'🅿'}} {{m}}</button>}</div><button [disabled]="busy() || !cart().length" (click)="pay()">Confirmar pago simulado</button>}
+@case('pago'){
+ <h2>Finaliza tu reserva</h2>
+ @if(!cart().length){<p>Tu carrito está vacío.</p><a routerLink="/goruta/vuelos">Explorar vuelos</a>}
+ @else{<div class="checkout-columns"><div>
+   <h3>Tu itinerario</h3>
+   @for(x of cart();track $index){
+     <article class="ticket">
+       @if(carrierFor(x);as carrier){@if(airlines[carrier];as code){<img [src]="'images/catalog/'+code+'.png'" [alt]="carrier">}}
+       <div><small>{{x.direction || x.item.type}} · {{carrierFor(x)}}</small>
+       <strong>{{x.route || x.title}}</strong>
+       @if(x.departure){<span>{{x.departure | date:'dd/MM/yyyy · HH:mm'}}</span>}
+       @if(x.item.seats.length){<span>Asientos {{x.item.seats.join(', ')}}</span>}</div>
+       <b>{{x.amount | currency:'MXN'}}</b>
+     </article>
+   }
+   <h3>Método de pago</h3>
+   <div class="method-list" role="group" aria-label="Método de pago">
+     @for(m of ['Visa','Mastercard','PayPal'];track m){
+       <button type="button" [attr.aria-pressed]="method===m" (click)="chooseMethod(m)">
+         @switch(m){@case('Visa'){<i class="visa">VISA</i>}@case('Mastercard'){<i class="mc" aria-hidden="true"></i><span>Mastercard</span>}@default{<i class="paypal">Pay<span>Pal</span></i>}}
+       </button>
+     }
+   </div>
+   <form id="demo-payment" #paymentForm="ngForm" (ngSubmit)="paymentForm.valid && pay()">
+     @if(method!=='PayPal'){
+       <p>Pago de práctica. Usa los datos de prueba que aparecen abajo.</p>
+       <button class="subtle" type="button" (click)="fillDemo()">Rellenar tarjeta de prueba</button>
+       <label>Nombre del titular<input [(ngModel)]="holder" name="holder" required pattern=".*\S.*" maxlength="80" autocomplete="off"></label>
+       <label>Número de tarjeta de prueba<input [(ngModel)]="cardNumber" name="number" required [pattern]="demoNumber()" [placeholder]="demoNumber()" inputmode="numeric" maxlength="16" autocomplete="off"></label>
+       <div class="date-pair"><label>Vencimiento<input [(ngModel)]="expiry" name="expiry" placeholder="12/30" required pattern="(0[1-9]|1[0-2])/[0-9]{2}" maxlength="5" autocomplete="off"></label>
+       <label>Código de prueba<input [(ngModel)]="cvc" name="cvc" type="password" required pattern="123" placeholder="123" inputmode="numeric" maxlength="3" autocomplete="off"></label></div>
+     }@else{<p>PayPal de demostración. Puedes confirmar la reserva sin entrar a una cuenta externa.</p>}
+   </form>
+ </div><aside class="bill"><h3>Detalle del pago</h3><p>Tarifa base <b>{{base() | currency:'MXN'}}</b></p>
+   <p>Impuesto incluido (16 %) <b>{{total()-base() | currency:'MXN'}}</b></p><p class="bill-total">Total <b>{{total() | currency:'MXN'}}</b></p>
+   <button type="submit" form="demo-payment" [disabled]="busy() || paymentForm.invalid || (method!=='PayPal' && !validExpiry())">{{busy()?'Confirmando…':'Confirmar pago simulado'}}</button>
+   <a routerLink="/goruta/carrito">Volver al carrito</a>
+ </aside></div>}
+}
 @case('confirmado'){<h2>Reserva confirmada</h2>@for(r of receipt();track r.id){<p>Reserva #{{r.id}} · {{r.method}} · {{r.total | currency:'MXN'}}</p>}}
 }</section>
 @if(selected();as row){

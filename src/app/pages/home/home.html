@@ -20,28 +20,21 @@
         playsinline
         class="hero-video-bg"
       >
-        <source src="/video/Video.mp4" type="video/mp4" />
+        <source src="video/Video.mp4" type="video/mp4" />
       </video>
       <div class="hero-video-overlay"></div>
     </div>
 
     <!-- Navigation Bar -->
     <nav class="nav-bar" aria-label="Navegación principal">
-      <a routerLink="/" class="nav-brand">
-        <span class="brand-plane">✈️</span>
-        <span class="brand-text">TravelBooking</span>
-      </a>
+      <a routerLink="/" class="goruta-wordmark" aria-label="GoRuta, inicio">Go<span>Ruta</span></a>
 
       <div class="nav-links">
-        @for (link of navLinks; track link.label) {
-          <a
-            [href]="link.href"
-            class="nav-link"
-            [class.active]="link.active"
-          >
-            {{ link.label }}
-          </a>
-        }
+        <a href="#hero" class="nav-link">Inicio</a>
+        <a routerLink="/goruta/vuelos" class="nav-link">Vuelos</a>
+        <a routerLink="/goruta/hoteles" class="nav-link">Hoteles</a>
+        <a routerLink="/goruta/paquetes" class="nav-link">Paquetes</a>
+        <a href="#destinos" class="nav-link">Destinos</a>
       </div>
 
       <!-- Actions: Contacto & Iniciar sesión -->
@@ -55,13 +48,7 @@
           Contacto
         </button>
 
-        <a routerLink="/login" class="btn-nav-login" title="Acceso de viajeros y administradores">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-            <circle cx="12" cy="7" r="4"></circle>
-          </svg>
-          <span>{{ auth.user() ? 'Mi sesión' : 'Iniciar sesión' }}</span>
-        </a>
+        <account-menu/>
       </div>
     </nav>
 
@@ -72,11 +59,11 @@
           <input
             type="text"
             class="hero-transparent-input"
-            placeholder="Busca tu destino (ej. Tokyo, París, Roma, Bali...)"
+            placeholder="Busca por destino, hotel o ruta"
             [value]="heroSearchText()"
             (input)="heroSearchText.set($any($event.target).value)"
             (keyup.enter)="onHeroSearch()"
-            aria-label="Buscar destino internacional"
+            aria-label="Buscar en el catálogo"
           />
           <button
             type="button"
@@ -97,8 +84,159 @@
   <!-- =========================================================================
        MAIN CONTENT: ADVANCED FILTERS + WIDE LUXURY BOOKING WIDGET + DESTINATIONS
        ========================================================================= -->
-  <main class="main-content" id="search-section">
-    <div class="main-layout-grid">
+  <main class="main-content">
+        <section class="destinations-section" id="destinos" aria-label="Destinos destacados mundiales">
+          @if (catalogError()) { <p role="alert">{{ catalogError() }} <button (click)="loadDestinations()">Reintentar</button></p> }
+          @if (catalogLoading()) { <p role="status">Cargando destinos…</p> }
+          <div class="destinations-header">
+            <div>
+              <h2 class="destinations-title">Destinos Destacados</h2>
+              <p class="destinations-subtitle">Descubre las ciudades y paraísos más codiciados del planeta con tarifas exclusivas.</p>
+            </div>
+
+            <!-- Carousel Controls -->
+            <div class="carousel-nav-arrows">
+              <button
+                type="button"
+                class="carousel-arrow"
+                (click)="prevSlide()"
+                aria-label="Destinos anteriores"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+              </button>
+              <button
+                type="button"
+                class="carousel-arrow"
+                (click)="nextSlide()"
+                aria-label="Siguientes destinos"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Cards Carousel Slider -->
+          <div class="destinations-carousel-viewport">
+            <div
+              class="destinations-track"
+              [style.transform]="'translateX(' + (-currentSlide() * 34) + '%)'"
+            >
+              @for (dest of destinations(); track dest.id) {
+                <article class="destination-card">
+                  <!-- Image Wrapper -->
+                  <div class="dest-image-box">
+                    <img
+                      [src]="dest.image"
+                      [alt]="dest.title + ' - ' + dest.country"
+                      class="dest-img"
+                      loading="lazy"
+                    />
+
+                    <!-- Dynamic Badges -->
+                    <span
+                      class="dest-badge"
+                      [class.badge-fuji]="dest.tagType === 'fuji'"
+                      [class.badge-europe]="dest.tagType === 'europe'"
+                      [class.badge-tropical]="dest.tagType === 'tropical'"
+                      [class.badge-local]="dest.tagType === 'local'"
+                      [class.badge-teal]="dest.tagType === 'teal'"
+                    >
+                      {{ dest.tag }}
+                    </span>
+
+                    <!-- Country Pill -->
+                    <span class="country-pill">
+                      📍 {{ dest.country }}
+                    </span>
+
+                    <!-- Favorite Button -->
+                    <button
+                      type="button"
+                      class="dest-fav-btn"
+                      [class.active]="dest.isFavorite"
+                      (click)="toggleFavorite(dest.id, $event)"
+                      [attr.aria-label]="dest.isFavorite ? 'Quitar de favoritos' : 'Guardar en favoritos'"
+                    >
+                      <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                      </svg>
+                    </button>
+                  </div>
+
+                  <!-- Details -->
+                  <div class="dest-info">
+                    <div class="dest-title-row">
+                      <h3 class="dest-city">{{ dest.title }}</h3>
+                      <span class="dest-stars">⭐ {{ dest.stars }}.0</span>
+                    </div>
+
+                    <p class="dest-place">{{ dest.subtitle }}</p>
+
+                    <div class="dest-perks">
+                      @if (dest.hasFreeCancel) {
+                        <span class="perk-badge">✓ Cancelación gratis</span>
+                      }
+                      @if (dest.hasBreakfast) {
+                        <span class="perk-badge">☕ Desayuno</span>
+                      }
+                    </div>
+
+                    <div class="dest-price-footer">
+                      <div class="price-numbers">
+                        <span class="price-val">${{ dest.price }}</span>
+                        <span class="price-old">${{ dest.originalPrice }}</span>
+                      </div>
+                      <button
+                        type="button"
+                        class="btn-book-card"
+                        (click)="setTab(dest.type === 'Vuelos' ? 'vuelos' : dest.type === 'Hoteles' ? 'hoteles' : 'paquetes'); showOffers(dest.title)"
+                      >
+                        Ver ofertas
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              } @empty {
+                <div class="no-results-card">
+                  <span class="no-results-icon">🌍</span>
+                  <h3>No se encontraron destinos</h3>
+                  <p>Todavía no hay destinos publicados.</p>
+
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Carousel Pagination Dots -->
+          <div class="carousel-dots-wrapper" aria-label="Navegación de diapositivas">
+            <button
+              type="button"
+              class="dot-indicator"
+              [class.active]="currentSlide() === 0"
+              (click)="goToSlide(0)"
+              aria-label="Diapositiva 1"
+            ></button>
+            <button
+              type="button"
+              class="dot-indicator"
+              [class.active]="currentSlide() === 1"
+              (click)="goToSlide(1)"
+              aria-label="Diapositiva 2"
+            ></button>
+            <button
+              type="button"
+              class="dot-indicator"
+              [class.active]="currentSlide() === 2"
+              (click)="goToSlide(2)"
+              aria-label="Diapositiva 3"
+            ></button>
+          </div>
+        </section>
+    <div class="main-layout-grid" id="search-section">
 
       <!-- LEFT SIDEBAR: ADVANCED GLOBAL TRAVEL FILTERS -->
       <aside class="travel-filters-sidebar" aria-label="Filtros de búsqueda avanzada">
@@ -180,7 +318,7 @@
               <div class="price-slider-wrap">
                 <div class="price-display">
                   <span class="price-min">$300</span>
-                  <span class="price-current-value">Hasta ${{ maxPrice() }}</span>
+                  <span class="price-current-value">{{maxPrice()===2500?'Sin límite':'Hasta $'+maxPrice()}}</span>
                   <span class="price-max">$2,500+</span>
                 </div>
                 <input
@@ -197,7 +335,7 @@
           }
         </div>
 
-        <!-- 3. Escalas y Vuelos -->
+        @if(activeTab()!=='hoteles'){
         <div class="filter-section">
           <button
             type="button"
@@ -238,7 +376,7 @@
           }
         </div>
 
-        <!-- 4. Calificación de Estrellas -->
+        } @if(activeTab()!=='vuelos'){
         <div class="filter-section">
           <button
             type="button"
@@ -315,276 +453,27 @@
               <label class="modern-checkbox">
                 <input type="checkbox" [checked]="wifi()" (change)="wifi.update(toggle)" />
                 <span class="check-box"></span>
-                <span class="check-label">Wifi de Alta Velocidad</span>
+                <span class="check-label">📶 Wi-Fi</span>
               </label>
 
               <label class="modern-checkbox">
                 <input type="checkbox" [checked]="pool()" (change)="pool.update(toggle)" />
                 <span class="check-box"></span>
-                <span class="check-label">Piscina / Spa de Lujo</span>
+                <span class="check-label">🏊 Piscina</span>
               </label>
+              @for(option of serviceOptions;track option[0]){<label class="modern-checkbox"><input type="checkbox" [checked]="extraServices().includes(option[0])" (change)="toggleService(option[0])"><span class="check-box"></span><span class="check-label">{{option[1]}}</span></label>}
             </div>
           }
         </div>
+      }
       </aside>
 
       <!-- RIGHT COLUMN: EXPANDED BOOKING SEARCH WIDGET + DESTINATIONS (NO EMPTY SPACES) -->
       <section class="main-booking-destinations-column">
 
-        <!-- WIDE BOOKING CARD WITH TABS AND BALANCED LAYOUT -->
-        <div class="booking-command-card">
-          <!-- Card Header Tabs -->
-          <div class="command-tabs-header" role="tablist">
-            <button
-              type="button"
-              class="cmd-tab"
-              [class.active]="activeTab() === 'vuelos'"
-              (click)="setTab('vuelos')"
-              role="tab"
-              [attr.aria-selected]="activeTab() === 'vuelos'"
-            >
-              <svg class="tab-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>
-              </svg>
-              <span>Vuelos</span>
-            </button>
 
-            <button
-              type="button"
-              class="cmd-tab"
-              [class.active]="activeTab() === 'hoteles'"
-              (click)="setTab('hoteles')"
-              role="tab"
-              [attr.aria-selected]="activeTab() === 'hoteles'"
-            >
-              <svg class="tab-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M2 4v16"/>
-                <path d="M2 8h18a2 2 0 0 1 2 2v10"/>
-                <path d="M2 17h20"/>
-                <path d="M6 8v9"/>
-              </svg>
-              <span>Hoteles</span>
-            </button>
 
-            <button
-              type="button"
-              class="cmd-tab"
-              [class.active]="activeTab() === 'paquetes'"
-              (click)="setTab('paquetes')"
-              role="tab"
-              [attr.aria-selected]="activeTab() === 'paquetes'"
-            >
-              <svg class="tab-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-              </svg>
-              <span>Paquetes Todo Incluido</span>
-            </button>
-          </div>
-
-          <!-- Command Body Form -->
-          <div class="command-body" [class.hotel-mode]="activeTab() === 'hoteles'">
-            <form class="cmd-form" (ngSubmit)="onSearchSubmit()">
-              <div class="field-item">
-                <label class="field-tag" for="own-search">Buscar en {{ activeTab() }}</label>
-                <div class="field-box"><input id="own-search" type="search" [value]="catalogSearchText()" (input)="catalogSearchText.set($any($event.target).value)" placeholder="Escribe una ciudad, ruta o nombre" /></div>
-              </div>
-              <div class="cmd-action-bar"><span>Explora las ofertas disponibles y elige tus fechas al reservar.</span><button type="submit" class="btn-search-main coral">Ver ofertas</button></div>
-            </form>
-          </div>
-
-          <!-- Integrated Trust Banner: Eliminates any empty white space with value -->
-          <div class="booking-trust-bar">
-            <div class="trust-item">
-              <span class="trust-icon">🛡️</span>
-              <div class="trust-text">
-                <strong>Mejor Precio Garantizado</strong>
-                <span>Sin tarifas ocultas ni sorpresas</span>
-              </div>
-            </div>
-
-            <div class="trust-item">
-              <span class="trust-icon">🔄</span>
-              <div class="trust-text">
-                <strong>Cancelación Flexible</strong>
-                <span>Consulta las condiciones de tu oferta</span>
-              </div>
-            </div>
-
-            <div class="trust-item">
-              <span class="trust-icon">🎧</span>
-              <div class="trust-text">
-                <strong>Soporte Personalizado 24/7</strong>
-                <span>Asesores expertos a tu disposición</span>
-              </div>
-            </div>
-
-            <div class="trust-item">
-              <span class="trust-icon">✨</span>
-              <div class="trust-text">
-                <strong>Experiencias Verificadas</strong>
-                <span>Opciones elegidas por nuestro equipo</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- =====================================================================
-             DESTINOS DESTACADOS CAROUSEL & CARDS
-             ===================================================================== -->
-        <section class="destinations-section" id="destinos" aria-label="Destinos destacados mundiales">
-          @if (catalogError()) { <p role="alert">{{ catalogError() }} <button (click)="loadDestinations()">Reintentar</button></p> }
-          @if (catalogLoading()) { <p role="status">Cargando destinos…</p> }
-          <div class="destinations-header">
-            <div>
-              <h2 class="destinations-title">Destinos Destacados</h2>
-              <p class="destinations-subtitle">Descubre las ciudades y paraísos más codiciados del planeta con tarifas exclusivas.</p>
-            </div>
-
-            <!-- Carousel Controls -->
-            <div class="carousel-nav-arrows">
-              <button
-                type="button"
-                class="carousel-arrow"
-                (click)="prevSlide()"
-                aria-label="Destinos anteriores"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="15 18 9 12 15 6"></polyline>
-                </svg>
-              </button>
-              <button
-                type="button"
-                class="carousel-arrow"
-                (click)="nextSlide()"
-                aria-label="Siguientes destinos"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="9 18 15 12 9 6"></polyline>
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <!-- Cards Carousel Slider -->
-          <div class="destinations-carousel-viewport">
-            <div
-              class="destinations-track"
-              [style.transform]="'translateX(' + (-currentSlide() * 34) + '%)'"
-            >
-              @for (dest of filteredDestinations(); track dest.id) {
-                <article class="destination-card">
-                  <!-- Image Wrapper -->
-                  <div class="dest-image-box">
-                    <img
-                      [src]="dest.image"
-                      [alt]="dest.title + ' - ' + dest.country"
-                      class="dest-img"
-                      loading="lazy"
-                    />
-
-                    <!-- Dynamic Badges -->
-                    <span
-                      class="dest-badge"
-                      [class.badge-fuji]="dest.tagType === 'fuji'"
-                      [class.badge-europe]="dest.tagType === 'europe'"
-                      [class.badge-tropical]="dest.tagType === 'tropical'"
-                      [class.badge-local]="dest.tagType === 'local'"
-                      [class.badge-teal]="dest.tagType === 'teal'"
-                    >
-                      {{ dest.tag }}
-                    </span>
-
-                    <!-- Country Pill -->
-                    <span class="country-pill">
-                      📍 {{ dest.country }}
-                    </span>
-
-                    <!-- Favorite Button -->
-                    <button
-                      type="button"
-                      class="dest-fav-btn"
-                      [class.active]="dest.isFavorite"
-                      (click)="toggleFavorite(dest.id, $event)"
-                      [attr.aria-label]="dest.isFavorite ? 'Quitar de favoritos' : 'Guardar en favoritos'"
-                    >
-                      <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2">
-                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                      </svg>
-                    </button>
-                  </div>
-
-                  <!-- Details -->
-                  <div class="dest-info">
-                    <div class="dest-title-row">
-                      <h3 class="dest-city">{{ dest.title }}</h3>
-                      <span class="dest-stars">⭐ {{ dest.stars }}.0</span>
-                    </div>
-
-                    <p class="dest-place">{{ dest.subtitle }}</p>
-
-                    <div class="dest-perks">
-                      @if (dest.hasFreeCancel) {
-                        <span class="perk-badge">✓ Cancelación gratis</span>
-                      }
-                      @if (dest.hasBreakfast) {
-                        <span class="perk-badge">☕ Desayuno</span>
-                      }
-                    </div>
-
-                    <div class="dest-price-footer">
-                      <div class="price-numbers">
-                        <span class="price-val">${{ dest.price }}</span>
-                        <span class="price-old">${{ dest.originalPrice }}</span>
-                      </div>
-                      <button
-                        type="button"
-                        class="btn-book-card"
-                        (click)="setTab(dest.type === 'Vuelos' ? 'vuelos' : dest.type === 'Hoteles' ? 'hoteles' : 'paquetes'); showOffers(dest.title)"
-                      >
-                        Ver ofertas
-                      </button>
-                    </div>
-                  </div>
-                </article>
-              } @empty {
-                <div class="no-results-card">
-                  <span class="no-results-icon">🌍</span>
-                  <h3>No se encontraron destinos</h3>
-                  <p>Intenta ajustar tus filtros de búsqueda o tu presupuesto máximo.</p>
-                  <button type="button" class="btn-clear-search" (click)="resetFilters()">Ver todos los destinos</button>
-                </div>
-              }
-            </div>
-          </div>
-
-          <!-- Carousel Pagination Dots -->
-          <div class="carousel-dots-wrapper" aria-label="Navegación de diapositivas">
-            <button
-              type="button"
-              class="dot-indicator"
-              [class.active]="currentSlide() === 0"
-              (click)="goToSlide(0)"
-              aria-label="Diapositiva 1"
-            ></button>
-            <button
-              type="button"
-              class="dot-indicator"
-              [class.active]="currentSlide() === 1"
-              (click)="goToSlide(1)"
-              aria-label="Diapositiva 2"
-            ></button>
-            <button
-              type="button"
-              class="dot-indicator"
-              [class.active]="currentSlide() === 2"
-              (click)="goToSlide(2)"
-              aria-label="Diapositiva 3"
-            ></button>
-          </div>
-        </section>
-
-        <app-catalog [morning]="morning()" [baggage]="baggage()" [destinations]="destinations()" [region]="selectedRegion()" [limit]="maxPrice()" [stars]="filterMinStars()" [breakfast]="filterBreakfast()" [freeCancel]="filterFreeCancellation()" [direct]="filterDirectFlights()" [wifi]="wifi()" [pool]="pool()" [kind]="activeTab()" [query]="catalogQuery()" (kindChange)="setTab($event)" />
+        <app-catalog [extraServices]="extraServices()" [morning]="morning()" [baggage]="baggage()" [destinations]="destinations()" [region]="selectedRegion()" [limit]="maxPrice()" [stars]="filterMinStars()" [breakfast]="filterBreakfast()" [freeCancel]="filterFreeCancellation()" [direct]="filterDirectFlights()" [wifi]="wifi()" [pool]="pool()" [kind]="activeTab()" [query]="catalogQuery()" (kindChange)="setTab($event)" (clearFilters)="resetFilters()" />
       </section>
 
     </div>

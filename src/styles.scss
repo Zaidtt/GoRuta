@@ -82,3 +82,15 @@ input, select {
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* Marca compartida por las cabeceras de GoRuta. */
+a.goruta-wordmark { display: inline-block; color: #fff; font: 800 1.9rem/1.15 var(--font-heading); letter-spacing: -.07em; text-decoration: none; text-shadow: 0 1px 4px #12182680; }
+.goruta-wordmark span { color: #ff876e; }
+
+html[data-theme=oscuro]{color-scheme:dark;--color-bg-page:#131d29;--color-text-dark:#e7eef4}
+html[data-theme=oscuro] :is(.main-content,.offer-card,.catalog-controls,.own-catalog,.trip-summary,.trip-panel,.bill,.travel-filters-sidebar,.destination-card,.admin-main,main:has(.save) section,app-travel-page){background:#1c2937!important;color:#eef3f7!important}
+html[data-theme=oscuro] :is(.own-catalog,.main-content,.trip-layout,.detail-heading) :is(h1,h2,h3,p,small,label,legend,.results-line,.category-switch button,.dest-city-name){color:#dbe8ef!important}
+html[data-theme=oscuro] :is(.own-catalog,.main-content,.trip-layout) input{background:#192631;color:white}
+::view-transition-old(auth-card){animation:auth-out .16s ease-in both}::view-transition-new(auth-card){animation:auth-in .28s ease-out both}
+@keyframes auth-out{to{opacity:0;transform:translateX(-14px)}}@keyframes auth-in{from{opacity:0;transform:translateX(14px)}}
+@media(prefers-reduced-motion:reduce){::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation-duration:.01ms!important}}

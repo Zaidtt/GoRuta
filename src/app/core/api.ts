@@ -2,10 +2,13 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { Observable, expand, map, reduce, EMPTY } from 'rxjs';
 
-export const API_ROOT = 'http://127.0.0.1:8000/api/';
+const local = ['localhost','127.0.0.1'].includes(location.hostname);
+const configuredRoot = (window as Window & { GORUTA_API_URL?:string }).GORUTA_API_URL;
+export const API_ROOT = configuredRoot ? new URL(configuredRoot.replace(/\/?$/, '/')).href :
+  local ? 'http://127.0.0.1:8000/api/' : new URL('api/', document.baseURI).href;
 export interface Row { id: string | number; [key: string]: any; }
 export interface Page<T> { count: number; next: string | null; previous: string | null; results: T[]; }
-export interface User { id: number; name: string; email: string; role: 'admin' | 'traveler'; }
+export interface User { avatar?:string; theme?:string; id: number; name: string; email: string; role: 'admin' | 'traveler'; }
 export interface Session { token: string; user: User; }
 export const storedSession = (): Session | null => {
   try { return JSON.parse(sessionStorage.getItem('goruta.session') || localStorage.getItem('goruta.session') || 'null'); }
@@ -13,7 +16,7 @@ export const storedSession = (): Session | null => {
 };
 export const authInterceptor: HttpInterceptorFn = (request, next) => {
   const token = storedSession()?.token;
-  return next(token && request.url.startsWith(API_ROOT)
+  return next(token && request.url !== API_ROOT + 'auth/login/' && request.url.startsWith(API_ROOT)
     ? request.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : request);
 };
 
@@ -33,16 +36,20 @@ export class Api {
     return id === undefined ? this.post<Row>(`${resource}/`, data)
       : this.http.patch<Row>(`${API_ROOT}${resource}/${encodeURIComponent(id)}/`, data);
   }
+  updateSettings<T>(data:unknown){return this.http.put<T>(API_ROOT+'account/settings/',data);}
   upload(resource: string, id: string | number, file: File) {
     const form = new FormData(); form.append('image', file);
     return this.post<Row>(`${resource}/${encodeURIComponent(id)}/image/`, form);
   }
   image(path: string): string {
-    return path?.startsWith('/media/') ? 'http://127.0.0.1:8000' + path : path || '/images/catalog-placeholder.svg';
+    return path?.startsWith('/media/') ? new URL(path,API_ROOT).href : (path || 'images/catalog-placeholder.svg').replace(/^\/images\//,'images/');
   }
   error(error: unknown): string {
     if (error instanceof HttpErrorResponse) {
+      if (!local && !configuredRoot) return 'El servicio de reservas público está pendiente de conexión.';
+      if (error.status === 0 && !local) return 'No se pudo conectar con el servicio de reservas.';
       if (error.status === 0) return 'No se pudo conectar. Inicia MySQL en XAMPP y la API en el puerto 8000.';
+      if (error.status === 401 && error.url === API_ROOT + 'auth/login/') return 'Correo o contraseña incorrectos.';
       if (error.status === 401) return 'Tu sesión terminó. Inicia sesión nuevamente.';
       const format = (value: any): string => typeof value === 'string' ? value : Array.isArray(value)
         ? value.map(format).join(' ') : value && typeof value === 'object'

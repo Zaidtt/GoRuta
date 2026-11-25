@@ -1,6 +1,6 @@
 <div class="admin-layout">
   <aside class="admin-sidebar">
-    <div class="sidebar-brand"><span class="brand-icon">✈️</span><div class="brand-info"><span class="brand-name">GoRuta</span><span class="brand-badge">Mi catálogo</span></div></div>
+    <div class="sidebar-brand"><div class="brand-info"><a routerLink="/" aria-label="GoRuta, inicio" class="goruta-wordmark">Go<span>Ruta</span></a><span class="brand-badge">Mi catálogo</span></div></div>
     <nav class="admin-nav" aria-label="Administración">
       <button class="admin-nav-item" [class.active]="tab() === 'overview'" (click)="select('overview')">Resumen</button>
       @for (entry of tabs; track entry.key) { <button class="admin-nav-item" [class.active]="tab() === entry.key" (click)="select(entry.key)">{{ entry.label }}</button> }
@@ -48,7 +48,11 @@
     <form #catalogForm="ngForm" (ngSubmit)="save()">
       <div class="catalog-form-grid">
         @for (field of schemas[resource]; track field.key) {
-          <label [class.checkbox-field]="field.type === 'checkbox'">{{ field.label }}
+          @if(resource==='hotels'){
+              @switch(field.key){@case('id'){<h3 class="form-band">🏨 Identidad y ubicación</h3>}@case('capacity'){<h3 class="form-band">🛏 Capacidad y mascotas</h3>}@case('kitchen'){<h3 class="form-band">✦ Servicios del alojamiento</h3>}@case('description'){<h3 class="form-band">▤ Descripción y tarifas</h3>}}
+              @if(field.key==='petLimit'){<label class="pet-switch"><input type="checkbox" [checked]="draft['petLimit']>0" (change)="draft['petLimit']=$any($event.target).checked?1:0"> 🐾 Admite mascotas</label>}
+            }
+            <label [class.checkbox-field]="field.type === 'checkbox'">{{ field.label }}
             @if (field.source) {
               <select [name]="field.key" [(ngModel)]="draft[field.key]" [required]="!!field.required"><option [ngValue]="null">Selecciona una opción</option>@for (option of data()[field.source]; track option.id) { <option [ngValue]="option.id">{{ label(option) }}</option> }</select>
             } @else if (field.options) {

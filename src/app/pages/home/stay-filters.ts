@@ -1,0 +1,27 @@
+import { Component, input, output } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+export const newStay=()=>({check_in:'',check_out:'',adults:1,children:0,infants:0,pets:0,min:0,max:0,type:'',beds:0,bedrooms:0,baths:0,amenities:[] as string[],order:''});
+export type Stay=ReturnType<typeof newStay>;
+export const amenities:Record<string,string>={wifi:'Wi-Fi',pool:'Piscina',hasBreakfast:'Desayuno incluido',hasFreeCancel:'Cancelación gratuita',kitchen:'Cocina',parking:'Estacionamiento',accessible:'Entrada sin escalones',airConditioning:'Aire acondicionado'};
+@Component({selector:'stay-filters',standalone:true,imports:[FormsModule],template:`
+ <button class="trigger" (click)="draft=copy(value());dialog.showModal()">☷ &nbsp; Filtros de alojamiento {{count()?'('+count()+')':''}}</button>
+ <dialog #dialog><form #form="ngForm" (ngSubmit)="apply.emit(draft);dialog.close()">
+ <header><h2>Filtros de alojamiento</h2><button type="button" aria-label="Cerrar" (click)="dialog.close()">×</button></header>
+ <div class="body"><fieldset><legend>Fechas de estancia</legend><div class="grid"><label>Llegada<input type="date" name="in" [min]="today" [(ngModel)]="draft.check_in"></label><label>Salida<input type="date" name="out" [min]="draft.check_in || today" [(ngModel)]="draft.check_out"></label></div></fieldset>
+ <fieldset><legend>¿Quiénes viajan?</legend>@for(g of guests;track g.key){<div class="counter"><span>{{g.label}}</span><button type="button" [attr.aria-label]="'Quitar '+g.label" [disabled]="draft[g.key]<=g.min" (click)="draft[g.key]=draft[g.key]-1">−</button><b>{{draft[g.key]}}</b><button type="button" [attr.aria-label]="'Añadir '+g.label" [disabled]="draft[g.key]>=g.max" (click)="draft[g.key]=draft[g.key]+1">+</button></div>}</fieldset>
+ <fieldset><legend>Precio por noche en MXN</legend><div class="grid"><label>Mínimo<input type="number" min="0" name="min" [(ngModel)]="draft.min"></label><label>Máximo (0 = sin límite)<input type="number" min="0" name="max" [(ngModel)]="draft.max"></label></div></fieldset>
+ <fieldset><legend>Espacio</legend><label>Tipo de alojamiento<select name="type" [(ngModel)]="draft.type"><option value="">Cualquiera</option>@for(t of types;track t){<option>{{t}}</option>}</select></label><div class="grid">@for(k of spaces;track k.key){<label>{{k.label}} mín.<input type="number" min="0" max="20" [name]="k.key" [(ngModel)]="draft[k.key]"></label>}</div></fieldset>
+ <fieldset><legend>Servicios y accesibilidad</legend><div class="grid">@for(k of keys;track k){<label class="check"><input type="checkbox" [checked]="draft.amenities.includes(k)" (change)="toggle(k)">{{labels[k]}}</label>}</div></fieldset>
+ <label>Ordenar por<select name="order" [(ngModel)]="draft.order"><option value="">Orden del catálogo</option><option value="low">Menor precio</option><option value="high">Mayor precio</option><option value="rating">Mejor calificación</option></select></label>
+ @if(invalid()){<p role="alert">Revisa las fechas, el rango de precios y el máximo de 20 viajeros.</p>}</div>
+ <footer><button type="button" (click)="draft=blank()">Limpiar todo</button><button [disabled]="invalid() || form.invalid">Mostrar alojamientos</button></footer></form></dialog>`,
+ styles:[`:host{display:block;padding:.7rem 1.25rem}.trigger,button{cursor:pointer;background:white;color:#183642;border:1px solid #a3b7c0;padding:.55rem .85rem;border-radius:12px;font-weight:650}dialog{color:#183642;background:white;border:0;border-radius:20px;padding:0;width:min(560px,95vw);box-shadow:0 16px 70px #12263844}dialog::backdrop{background:#10233388}form{display:flex;flex-direction:column;max-height:85dvh}header,footer,.counter{display:flex;align-items:center;gap:.7rem}header,footer{justify-content:space-between;padding:1rem 1.4rem;border-bottom:1px solid #dde4e7}h2{margin:0;font-size:1.25rem}.body{overflow:auto;padding:0 1.4rem 1rem}fieldset{border:none;border-bottom:1px solid #dee6ea;margin:1rem 0;padding:0 0 1rem}legend{font-weight:750;margin-bottom:.65rem}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.65rem}label{display:grid;gap:.3rem;font-size:.86rem}.check{display:flex;align-items:center}input,select{min-width:0;color:#163441;background:white;border:1px solid #b3c4ca;border-radius:8px;padding:.55rem}.counter span{flex:1}.counter{margin:.3rem 0}.counter button{border-radius:50%}footer button:last-child{background:#126670;color:white}button:disabled{opacity:.45}`]})
+export class StayFilters{
+ value=input.required<Stay>();apply=output<Stay>();blank=newStay;copy=(s:Stay)=>structuredClone(s);draft=newStay();
+ today=new Date().toLocaleDateString('en-CA');labels=amenities;keys=Object.keys(amenities);types=['Hotel','Departamento','Casa','Habitación privada'];
+ guests=[{key:'adults',label:'Adultos',min:1,max:20},{key:'children',label:'Niños',min:0,max:19},{key:'infants',label:'Bebés',min:0,max:10},{key:'pets',label:'Mascotas',min:0,max:4}] as const;
+ spaces=[{key:'bedrooms',label:'Recámaras'},{key:'beds',label:'Camas'},{key:'baths',label:'Baños'}] as const;
+ toggle(k:string){this.draft.amenities=this.draft.amenities.includes(k)?this.draft.amenities.filter(v=>v!==k):[...this.draft.amenities,k];}
+ invalid(){const s=this.draft;return !!(s.check_in || s.check_out) && !(s.check_in>=this.today && s.check_out>s.check_in) || !!s.max && s.min>s.max || s.adults+s.children+s.infants>20;}
+ count(){const defaults=newStay();return (Object.keys(defaults) as (keyof Stay)[]).filter(k=>JSON.stringify(this.value()[k])!==JSON.stringify(defaults[k])).length;}
+}

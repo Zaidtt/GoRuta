@@ -1,3 +1,4 @@
+import { AccountMenu } from '../../core/account-menu';
 import { Component, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -28,16 +29,18 @@ import { Catalog } from './catalog';
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, Catalog],
+  imports: [CommonModule, FormsModule, RouterLink, Catalog, AccountMenu],
   templateUrl: './home.html',
   styleUrl: './home.scss'
 })
 export class Home {
   morning=signal(false); baggage=signal(false);
+  extraServices=signal<string[]>([]);
+  serviceOptions=[['petLimit','🐾 Admite mascotas'],['parking','🅿 Estacionamiento'],['kitchen','🍴 Cocina'],['accessible','♿ Entrada sin escalones'],['airConditioning','❄ Aire acondicionado']];
+  toggleService(key:string){this.extraServices.update(items=>items.includes(key)?items.filter(x=>x!==key):[...items,key]);}
   wifi=signal(false); pool=signal(false); toggle=(value:boolean)=>!value;
   api = inject(Api); auth = inject(Auth);
   catalogQuery = signal('');
-  catalogSearchText = signal('');
   catalogLoading = signal(false);
   catalogError = signal('');
   private favoriteIds = new Map<number, number>();
@@ -58,18 +61,10 @@ export class Home {
     });
   }
   showOffers(title: string) {
-    this.catalogQuery.set(title);
+    this.heroSearchText.set(title);
+    this.catalogQuery.set(title.trim());
     document.getElementById('catalogo')?.scrollIntoView({ behavior: 'smooth' });
   }
-
-  // Navigation
-  readonly navLinks = [
-    { label: 'Inicio', active: true, href: '#hero' },
-    { label: 'Vuelos', active: false, href: '#search-section' },
-    { label: 'Hoteles', active: false, href: '#search-section' },
-    { label: 'Paquetes', active: false, href: '#destinos' },
-    { label: 'Nosotros', active: false, href: '#destinos' }
-  ];
 
   // Active Booking Tab: 'vuelos' | 'hoteles' | 'paquetes'
   activeTab = signal<'vuelos' | 'hoteles' | 'paquetes'>('vuelos');
@@ -125,59 +120,15 @@ export class Home {
   // Carousel current slide
   currentSlide = signal(0);
 
-  // Filtered destinations logic
-  filteredDestinations = computed(() => {
-    let list = this.destinations();
-    const q = this.heroSearchText().trim().toLowerCase();
-    const region = this.selectedRegion();
-    const maxP = this.maxPrice();
-    const minStars = this.filterMinStars();
-    const freeCancel = this.filterFreeCancellation();
-    const breakfast = this.filterBreakfast();
-
-    if (q) {
-      list = list.filter(d =>
-        d.title.toLowerCase().includes(q) ||
-        d.country.toLowerCase().includes(q) ||
-        d.subtitle.toLowerCase().includes(q)
-      );
-    }
-
-    if (region !== 'todos') {
-      list = list.filter(d => d.region === region);
-    }
-
-    if (maxP < 2500) {
-      list = list.filter(d => d.price <= maxP);
-    }
-
-    if (minStars > 0) {
-      list = list.filter(d => d.stars >= minStars);
-    }
-
-    if (freeCancel) {
-      list = list.filter(d => d.hasFreeCancel);
-    }
-
-    if (breakfast) {
-      list = list.filter(d => d.hasBreakfast);
-    }
-
-    return list;
-  });
-
   // Maximum slide limit
   maxSlide = computed(() => {
-    const total = this.filteredDestinations().length;
+    const total = this.destinations().length;
     return Math.max(0, total - 3);
   });
 
   // Methods
   setTab(tab: 'vuelos' | 'hoteles' | 'paquetes') {
     this.activeTab.set(tab);
-    this.catalogQuery.set('');
-    const label = tab === 'vuelos' ? 'Vuelos' : tab === 'hoteles' ? 'Hoteles' : 'Paquetes Completos';
-    this.showToast(`Buscando por categoría: ${label}`);
   }
 
   favoriteBusy = signal(false);
@@ -209,20 +160,10 @@ export class Home {
     this.currentSlide.set(index);
   }
 
-  onSearchSubmit() { this.showOffers(this.catalogSearchText()); }
-
-  onHeroSearch() {
-    const q = this.heroSearchText().trim();
-    if (q) {
-      this.showToast(`Filtrando catálogo por: "${q}"`);
-      const target = document.getElementById('search-section');
-      if (target) {
-        target.scrollIntoView({ behavior: 'smooth' });
-      }
-    }
-  }
+  onHeroSearch() { this.showOffers(this.heroSearchText()); }
 
   resetFilters() {
+    this.extraServices.set([]);
     this.morning.set(false);this.baggage.set(false);this.wifi.set(false);this.pool.set(false);this.filterDirectFlights.set(false);
     this.selectedRegion.set('todos');
     this.maxPrice.set(2500);
@@ -230,6 +171,7 @@ export class Home {
     this.filterFreeCancellation.set(false);
     this.filterBreakfast.set(false);
     this.heroSearchText.set('');
+    this.catalogQuery.set('');
     this.showToast('Filtros restablecidos a valores por defecto');
   }
 

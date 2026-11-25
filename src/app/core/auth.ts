@@ -1,4 +1,4 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, signal, effect } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { catchError, map, of, tap } from 'rxjs';
 import { Api, Session, User, storedSession } from './api';
@@ -7,6 +7,12 @@ import { Api, Session, User, storedSession } from './api';
 export class Auth {
   private api = inject(Api);
   user = signal<User | null>(storedSession()?.user || null);
+  constructor(){effect(()=>{document.documentElement.dataset['theme']=this.user()?.theme || 'claro';});}
+  sync(user:User){
+    const session=storedSession();if(!session)return;
+    const storage=sessionStorage.getItem('goruta.session')?sessionStorage:localStorage;
+    storage.setItem('goruta.session',JSON.stringify({...session,user}));this.user.set(user);
+  }
   login(email: string, password: string, remember: boolean) {
     return this.api.post<Session>('auth/login/', { email, password }).pipe(tap(session => {
       this.clear();
@@ -29,3 +35,5 @@ export const adminGuard: CanActivateFn = () => {
   return auth.validate().pipe(map(user => user.role === 'admin' ? true : router.createUrlTree(['/'])),
     catchError(() => { auth.clear(); return of(router.createUrlTree(['/login'])); }));
 };
+
+export const accountGuard:CanActivateFn=()=>storedSession()?.token?true:inject(Router).createUrlTree(['/login'],{queryParams:{volver:'/goruta/configuracion'}});

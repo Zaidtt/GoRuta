@@ -18,11 +18,11 @@ export class Login {
   private route = inject(ActivatedRoute);
   private api = inject(Api);
   // Selected user role
-  selectedRole = signal<'traveler' | 'admin'>('traveler');
+
 
   // Form fields
-  email = signal('admin@travelbooking.com');
-  password = signal('admin123');
+  email = signal('');
+  password = signal('');
   rememberMe = signal(true);
   showPassword = signal(false);
 
@@ -31,26 +31,13 @@ export class Login {
   errorMessage = signal<string | null>(null);
   successMessage = signal<string | null>(null);
 
-  constructor(private router: Router) {}
-
-  selectRole(role: 'traveler' | 'admin') {
-    this.selectedRole.set(role);
-    this.errorMessage.set(null);
-    if (role === 'admin') {
-      this.email.set('admin@travelbooking.com');
-      this.password.set('admin123');
-    } else {
-      this.email.set('viajero@ejemplo.com');
-      this.password.set('viajero123');
-    }
+  constructor(private router: Router) {
+    const registered=this.route.snapshot.queryParamMap.get('correo');
+    if(registered){this.email.set(registered);this.password.set('');}
   }
 
   toggleShowPassword() {
     this.showPassword.set(!this.showPassword());
-  }
-
-  fillDemo(role: 'traveler' | 'admin') {
-    this.selectRole(role);
   }
 
   onSubmit() {
@@ -58,7 +45,7 @@ export class Login {
     this.successMessage.set(null);
 
     const currentEmail = this.email().trim();
-    const currentPass = this.password().trim();
+    const currentPass = this.password();
 
     if (!currentEmail || !currentPass) {
       this.errorMessage.set('Por favor completa todos los campos requeridos.');

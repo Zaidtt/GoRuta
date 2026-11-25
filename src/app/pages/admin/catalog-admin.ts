@@ -51,6 +51,18 @@ export class Admin {
       { key: 'name', label: 'Nombre del hotel', required: true }, { key: 'city', label: 'Ciudad', required: true },
       { key: 'country', label: 'País', required: true },
       { key: 'destinationRef', label: 'Destino del catálogo (opcional)', source: 'destinations' },
+      {key:'hostName',label:'Anfitrión o recepción'},
+      {key:'roomPhoto',label:'Fotografía de habitación (ruta o URL)'},
+      {key:'stayType',label:'Tipo de alojamiento',options:['Hotel','Departamento','Casa','Habitación privada']},
+      {key:'capacity',label:'Huéspedes máximos',type:'number',min:1,max:20},
+      {key:'beds',label:'Camas',type:'number',min:1,max:20},
+      {key:'bedrooms',label:'Recámaras',type:'number',min:1,max:20},
+      {key:'baths',label:'Baños',type:'number',min:1,max:20},
+      {key:'petLimit',label:'Mascotas máximas',type:'number',min:0,max:20},
+      {key:'kitchen',label:'Cocina',type:'checkbox'},
+      {key:'parking',label:'Estacionamiento',type:'checkbox'},
+      {key:'accessible',label:'Entrada sin escalones',type:'checkbox'},
+      {key:'airConditioning',label:'Aire acondicionado',type:'checkbox'},
       { key: 'wifi', label: 'Wifi', type: 'checkbox' },
       { key: 'pool', label: 'Piscina', type: 'checkbox' },
       { key: 'description', label: 'Descripción' },
@@ -92,7 +104,7 @@ export class Admin {
   resource() { return this.tab() as Resource; }
   open(resource: Resource, row?: Row) {
     this.error.set(''); this.notice.set(''); this.editingId = row?.id;
-    this.draft = row ? { ...row } : { isPublished: true, active: true, direct: true, region: 'América',
+    this.draft = row ? { ...row } : { capacity:4,beds:1,bedrooms:1,baths:1,petLimit:0,stayType:'Hotel',isPublished: true, active: true, direct: true, region: 'América',
       type: 'Paquetes', tagType: 'local', stars: 3, rating: 3, status: resource === 'flights' ? 'Activo' : 'Disponible',
       nights: 1, availableSeats: 1, price: 0, originalPrice: 0, pricePerNight: 0,
       hasFreeCancel: false, hasBreakfast: false, image: '' };

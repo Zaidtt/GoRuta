@@ -60,28 +60,6 @@
   }
 }
 
-.brand-logo {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  text-decoration: none;
-  color: #ffffff;
-
-  .logo-icon {
-    font-size: 1.45rem;
-  }
-
-  .logo-text {
-    font-family: var(--font-heading);
-    font-size: 1.35rem;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    background: linear-gradient(135deg, #ffffff 40%, rgba(255, 255, 255, 0.7) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-}
-
 .back-home-link {
   display: inline-flex;
   align-items: center;
@@ -367,6 +345,8 @@
 
   .form-input {
     flex: 1;
+    min-width: 0;
+    height: 100%;
     background: transparent;
     border: none;
     outline: none;
@@ -542,3 +522,10 @@
     }
   }
 }
+
+.login-card{view-transition-name:auth-card;animation:auth-enter .32s ease-out}
+.login-card>form label{display:grid;gap:.35rem;margin-top:.8rem;color:#f3f7fb}.login-card>p,.login-card small{color:#beccda}.login-card a:not(.back-home-link){color:#fff}.login-card h1{color:#fff}.primary{display:block;background:#d24b36;color:white;border:0;border-radius:10px;padding:.9rem;width:100%;font-weight:700;margin:1rem 0;text-align:center}
+@keyframes auth-enter{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.login-card{animation:none;view-transition-name:none}}
+
+.login-card form [role=alert]{display:block;background:#611d2c;color:#fff0f0;border:2px solid #ff8394;border-radius:12px;padding:1rem;font-size:1.03rem;font-weight:700}
