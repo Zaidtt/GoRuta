@@ -1,7 +1,7 @@
 import { Auth } from './auth';
 import { Injectable, Injector, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
-import { Observable, expand, map, reduce, EMPTY, catchError, throwError } from 'rxjs';
+import { Observable, expand, map, reduce, shareReplay, EMPTY, catchError, throwError } from 'rxjs';
 
 const local = ['localhost','127.0.0.1'].includes(location.hostname);
 const configuredRoot = (window as Window & { GORUTA_API_URL?:string }).GORUTA_API_URL;
@@ -35,6 +35,9 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
 @Injectable({ providedIn: 'root' })
 export class Api {
   private http = inject(HttpClient);
+  readonly preview = location.hostname === 'zaidtt.github.io'
+    ? this.http.get<Record<string, Row[]>>('catalogo-publico.json').pipe(shareReplay(1))
+    : EMPTY;
   get<T>(path: string): Observable<T> { return this.http.get<T>(API_ROOT + path); }
   post<T>(path: string, body: unknown): Observable<T> { return this.http.post<T>(API_ROOT + path, body); }
   delete(path: string) { return this.http.delete(API_ROOT + path); }

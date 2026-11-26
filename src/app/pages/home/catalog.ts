@@ -95,8 +95,14 @@ export class Catalog {
       });
       return;
     }
+    let refreshed = false;
+    this.api.preview.subscribe({ next: data => {
+      if (!refreshed && !this.offers()['vuelos'].length) {
+        this.offers.set({ vuelos: data['vuelos'], hoteles: data['hoteles'], paquetes: data['paquetes'] });
+      }
+    }, error: () => {} });
     forkJoin({ vuelos: this.api.all('flights'), hoteles: this.api.all('hotels'), paquetes: this.api.all('packages') }).subscribe({
-      next: offers => { this.offers.set(offers); this.loading.set(false); },
+      next: offers => { refreshed = true; this.offers.set(offers); this.loading.set(false); },
       error: error => { this.error.set(this.api.error(error)); this.loading.set(false); }
     });
   }

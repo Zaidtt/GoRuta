@@ -27,7 +27,7 @@
   @if(query()){<p>Resultados para <strong>{{query()}}</strong></p>}
   @if (error()) { <p class="alert" role="alert">{{ error() }}</p> }
   @if (notice()) { <p class="notice" role="status">{{ notice() }}</p> }
-  @if (loading()) { <p role="status">Cargando ofertas…</p> }
+  @if (loading()) { <p role="status">{{ offers()['vuelos'].length ? 'Consultando precios y disponibilidad actuales…' : 'Cargando ofertas…' }}</p> }
   @if(!loading()){<div class="results-line"><strong>{{rows().length}} {{rows().length===1?'resultado':'resultados'}}</strong><span>Precios en MXN</span></div>}
   <div class="offer-grid" [class.flight-list]="kind()==='vuelos'">
     @for (row of rows(); track row.id) {

@@ -47,11 +47,19 @@ export class Home {
   constructor() { this.loadDestinations(); }
   loadDestinations() {
     this.catalogLoading.set(true); this.catalogError.set('');
-    this.api.all<Row>('destinations').subscribe({
-      next: rows => {
+    const display = (rows: Row[]) => {
         this.destinations.set(rows.filter(row => row['isPublished'] !== false).map(row => ({ ...row,
           id: Number(row.id), price: Number(row['price']), originalPrice: Number(row['originalPrice']),
           image: this.api.image(row['image']) } as GlobalDestination)));
+    };
+    let refreshed = false;
+    this.api.preview.subscribe({ next: data => {
+      if (!refreshed && !this.destinations().length) display(data['destinations']);
+    }, error: () => {} });
+    this.api.all<Row>('destinations').subscribe({
+      next: rows => {
+        refreshed = true;
+        display(rows);
         this.catalogLoading.set(false);
       }, error: error => { this.catalogLoading.set(false); this.catalogError.set(this.api.error(error)); }
     });
